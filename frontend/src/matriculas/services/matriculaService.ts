@@ -6,6 +6,11 @@ export async function listarAlunosDaTurma(turmaId: number): Promise<Matricula[]>
   return response.data
 }
 
+export async function listarMinhasTurmas(): Promise<Matricula[]> {
+  const response = await api.get<Matricula[]>('/minhas-turmas')
+  return response.data
+}
+
 export async function removerAlunoDaTurma(
   turmaId: number,
   alunoId: number,
