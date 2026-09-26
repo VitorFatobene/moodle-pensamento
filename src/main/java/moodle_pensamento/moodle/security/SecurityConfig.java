@@ -1,5 +1,6 @@
 package moodle_pensamento.moodle.security;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,12 +44,14 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> escreverErro(
+                                request,
                                 response,
                                 HttpStatus.UNAUTHORIZED,
                                 "Unauthorized",
                                 "Autenticação necessária"
                         ))
                         .accessDeniedHandler((request, response, accessDeniedException) -> escreverErro(
+                                request,
                                 response,
                                 HttpStatus.FORBIDDEN,
                                 "Forbidden",
@@ -95,15 +98,16 @@ public class SecurityConfig {
     }
 
     private void escreverErro(
+            jakarta.servlet.http.HttpServletRequest request,
             jakarta.servlet.http.HttpServletResponse response,
             HttpStatus status,
-            String erro,
-            String mensagem
+            String error,
+            String message
     ) throws java.io.IOException {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write("""
-                {"status":%d,"erro":"%s","mensagem":"%s"}\
-                """.formatted(status.value(), erro, mensagem));
+                {"timestamp":"%s","status":%d,"error":"%s","message":"%s","path":"%s"}\
+                """.formatted(LocalDateTime.now(), status.value(), error, message, request.getRequestURI()));
     }
 }

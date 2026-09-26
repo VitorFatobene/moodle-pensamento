@@ -32,6 +32,9 @@
 /home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/entrega/exception/AlunoSemMatriculaException.java
 /home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/entrega/exception/EntregaJaConcluidaException.java
 /home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/entrega/exception/EntregaNaoEncontradaException.java
+/home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/exception/ApiErrorResponse.java
+/home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/exception/GlobalExceptionHandler.java
+/home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/exception/ValidationErrorResponse.java
 /home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/matricula/Matricula.java
 /home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/matricula/MatriculaController.java
 /home/fatobene/moodle/backend/src/main/java/moodle_pensamento/moodle/matricula/MatriculaRepository.java
