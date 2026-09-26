@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/hooks/useAuth'
 
 export function ProfessorHomePage() {
@@ -14,6 +14,9 @@ export function ProfessorHomePage() {
     <main>
       <h1>Área do Professor</h1>
       <p>{user ? `Bem-vindo, ${user.nome}.` : 'Sessão de professor.'}</p>
+      <Link className="text-link" to="/professor/turmas">
+        Ver turmas
+      </Link>
       <button type="button" onClick={handleLogout}>
         Sair
       </button>
