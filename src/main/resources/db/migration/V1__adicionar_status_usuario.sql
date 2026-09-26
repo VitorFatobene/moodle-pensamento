@@ -1,6 +1,0 @@
-ALTER TABLE usuarios
-ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ATIVO';
-
-ALTER TABLE usuarios
-ADD CONSTRAINT chk_usuarios_status
-CHECK (status IN ('ATIVO', 'INATIVO'));

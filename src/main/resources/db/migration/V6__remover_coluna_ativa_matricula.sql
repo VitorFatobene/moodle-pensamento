@@ -1,2 +1,0 @@
-ALTER TABLE matriculas
-DROP COLUMN IF EXISTS ativa;

@@ -1,2 +1,0 @@
-ALTER TABLE turmas
-DROP COLUMN IF EXISTS ativa;
