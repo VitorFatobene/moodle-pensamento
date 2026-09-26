@@ -9,7 +9,7 @@ import moodle_pensamento.moodle.matricula.StatusMatricula;
 import moodle_pensamento.moodle.matricula.dto.MatriculaRequestDTO;
 import moodle_pensamento.moodle.matricula.exception.AlunoInvalidoException;
 import moodle_pensamento.moodle.matricula.exception.AlunoJaMatriculadoException;
-import moodle_pensamento.moodle.solicitacao.dto.SolicitacaoEntradaRequestDTO;
+import moodle_pensamento.moodle.security.UsuarioAutenticadoService;
 import moodle_pensamento.moodle.solicitacao.dto.SolicitacaoEntradaResponseDTO;
 import moodle_pensamento.moodle.solicitacao.exception.SolicitacaoJaExisteException;
 import moodle_pensamento.moodle.solicitacao.exception.SolicitacaoJaProcessadaException;
@@ -18,10 +18,9 @@ import moodle_pensamento.moodle.turma.StatusTurma;
 import moodle_pensamento.moodle.turma.Turma;
 import moodle_pensamento.moodle.turma.TurmaRepository;
 import moodle_pensamento.moodle.turma.exception.TurmaNaoEncontradaException;
-import moodle_pensamento.moodle.usuario.StatusUsuario;
 import moodle_pensamento.moodle.usuario.TipoUsuario;
 import moodle_pensamento.moodle.usuario.Usuario;
-import moodle_pensamento.moodle.usuario.UsuarioRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,29 +30,29 @@ import org.springframework.transaction.annotation.Transactional;
 public class SolicitacaoEntradaService {
 
     private final SolicitacaoEntradaRepository solicitacaoEntradaRepository;
-    private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
     private final MatriculaRepository matriculaRepository;
     private final MatriculaService matriculaService;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
-    public SolicitacaoEntradaResponseDTO criar(SolicitacaoEntradaRequestDTO dto) {
-        Usuario aluno = buscarAlunoValido(dto.alunoId());
-        Turma turma = buscarTurmaAtiva(dto.turmaId());
+    public SolicitacaoEntradaResponseDTO criar(Long turmaId) {
+        Usuario aluno = buscarAlunoAutenticado();
+        Turma turma = buscarTurmaAtiva(turmaId);
 
         if (matriculaRepository.existsByAlunoIdAndTurmaIdAndStatus(
-                dto.alunoId(),
-                dto.turmaId(),
+                aluno.getId(),
+                turmaId,
                 StatusMatricula.ATIVA
         )) {
-            throw new AlunoJaMatriculadoException(dto.alunoId(), dto.turmaId());
+            throw new AlunoJaMatriculadoException(aluno.getId(), turmaId);
         }
 
         if (solicitacaoEntradaRepository.existsByAlunoIdAndTurmaIdAndStatus(
-                dto.alunoId(),
-                dto.turmaId(),
+                aluno.getId(),
+                turmaId,
                 StatusSolicitacao.PENDENTE
         )) {
-            throw new SolicitacaoJaExisteException(dto.alunoId(), dto.turmaId());
+            throw new SolicitacaoJaExisteException(aluno.getId(), turmaId);
         }
 
         SolicitacaoEntrada solicitacao = new SolicitacaoEntrada(
@@ -71,6 +70,9 @@ public class SolicitacaoEntradaService {
 
     @Transactional(readOnly = true)
     public List<SolicitacaoEntradaResponseDTO> listarPendentesPorTurma(Long turmaId) {
+        Turma turma = buscarTurmaAtiva(turmaId);
+        validarProfessorAutenticadoResponsavel(turma);
+
         return solicitacaoEntradaRepository.findAllByTurmaIdAndStatus(
                         turmaId,
                         StatusSolicitacao.PENDENTE
@@ -81,8 +83,10 @@ public class SolicitacaoEntradaService {
     }
 
     @Transactional(readOnly = true)
-    public List<SolicitacaoEntradaResponseDTO> listarPorAluno(Long alunoId) {
-        return solicitacaoEntradaRepository.findAllByAlunoId(alunoId)
+    public List<SolicitacaoEntradaResponseDTO> listarMinhasSolicitacoes() {
+        Usuario aluno = buscarAlunoAutenticado();
+
+        return solicitacaoEntradaRepository.findAllByAlunoId(aluno.getId())
                 .stream()
                 .map(this::toResponseDTO)
                 .toList();
@@ -90,6 +94,7 @@ public class SolicitacaoEntradaService {
 
     public SolicitacaoEntradaResponseDTO aceitar(Long id) {
         SolicitacaoEntrada solicitacao = buscarPendenteOuFalhar(id);
+        validarProfessorAutenticadoResponsavel(solicitacao.getTurma());
 
         matriculaService.criar(new MatriculaRequestDTO(
                 solicitacao.getAluno().getId(),
@@ -105,6 +110,7 @@ public class SolicitacaoEntradaService {
 
     public SolicitacaoEntradaResponseDTO recusar(Long id) {
         SolicitacaoEntrada solicitacao = buscarPendenteOuFalhar(id);
+        validarProfessorAutenticadoResponsavel(solicitacao.getTurma());
 
         solicitacao.setStatus(StatusSolicitacao.RECUSADA);
         solicitacao.setDataResposta(LocalDateTime.now());
@@ -128,20 +134,28 @@ public class SolicitacaoEntradaService {
                 });
     }
 
-    private Usuario buscarAlunoValido(Long alunoId) {
-        Usuario aluno = usuarioRepository.findByIdAndStatus(alunoId, StatusUsuario.ATIVO)
-                .orElseThrow(() -> new AlunoInvalidoException(alunoId));
+    private Turma buscarTurmaAtiva(Long turmaId) {
+        return turmaRepository.findByIdAndStatus(turmaId, StatusTurma.ATIVA)
+                .orElseThrow(() -> new TurmaNaoEncontradaException(turmaId));
+    }
+
+    private Usuario buscarAlunoAutenticado() {
+        Usuario aluno = usuarioAutenticadoService.get();
 
         if (aluno.getTipoUsuario() != TipoUsuario.ALUNO) {
-            throw new AlunoInvalidoException(alunoId);
+            throw new AlunoInvalidoException(aluno.getId());
         }
 
         return aluno;
     }
 
-    private Turma buscarTurmaAtiva(Long turmaId) {
-        return turmaRepository.findByIdAndStatus(turmaId, StatusTurma.ATIVA)
-                .orElseThrow(() -> new TurmaNaoEncontradaException(turmaId));
+    private void validarProfessorAutenticadoResponsavel(Turma turma) {
+        Usuario professor = usuarioAutenticadoService.get();
+
+        if (professor.getTipoUsuario() != TipoUsuario.PROFESSOR
+                || !turma.getProfessor().getId().equals(professor.getId())) {
+            throw new AccessDeniedException("Professor não é responsável pela turma");
+        }
     }
 
     private SolicitacaoEntradaResponseDTO toResponseDTO(SolicitacaoEntrada solicitacao) {

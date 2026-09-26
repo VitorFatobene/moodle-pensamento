@@ -1,5 +1,6 @@
 moodle_pensamento/moodle/aviso/dto/AvisoResponseDTO.class
 moodle_pensamento/moodle/turma/exception/CodigoTurmaJaExisteException.class
+moodle_pensamento/moodle/auth/AuthService.class
 moodle_pensamento/moodle/turma/Turma.class
 moodle_pensamento/moodle/entrega/StatusEntrega.class
 moodle_pensamento/moodle/atividade/StatusAtividade.class
@@ -10,10 +11,12 @@ moodle_pensamento/moodle/atividade/dto/AtividadeRequestDTO.class
 moodle_pensamento/moodle/turma/exception/ProfessorInvalidoException.class
 moodle_pensamento/moodle/entrega/EntregaAtividadeService.class
 moodle_pensamento/moodle/atividade/AtividadeController.class
+moodle_pensamento/moodle/security/SecurityConfig.class
 moodle_pensamento/moodle/atividade/AtividadeRepository.class
 moodle_pensamento/moodle/entrega/exception/EntregaNaoEncontradaException.class
 moodle_pensamento/moodle/usuario/StatusUsuario.class
 moodle_pensamento/moodle/usuario/UsuarioController.class
+moodle_pensamento/moodle/security/JwtAuthenticationFilter.class
 moodle_pensamento/moodle/entrega/EntregaAtividadeRepository.class
 moodle_pensamento/moodle/aviso/dto/AvisoRequestDTO.class
 moodle_pensamento/moodle/MoodleApplication.class
@@ -22,6 +25,7 @@ moodle_pensamento/moodle/entrega/EntregaAtividadeController.class
 moodle_pensamento/moodle/solicitacao/StatusSolicitacao.class
 moodle_pensamento/moodle/solicitacao/exception/SolicitacaoJaProcessadaException.class
 moodle_pensamento/moodle/usuario/TipoUsuario.class
+moodle_pensamento/moodle/auth/dto/LoginResponseDTO.class
 moodle_pensamento/moodle/entrega/EntregaAtividade.class
 moodle_pensamento/moodle/entrega/dto/NotaEntregaRequestDTO.class
 moodle_pensamento/moodle/entrega/exception/AlunoSemMatriculaException.class
@@ -30,7 +34,7 @@ moodle_pensamento/moodle/turma/dto/TurmaResponseDTO.class
 moodle_pensamento/moodle/matricula/dto/MatriculaResponseDTO.class
 moodle_pensamento/moodle/entrega/exception/EntregaJaConcluidaException.class
 moodle_pensamento/moodle/solicitacao/SolicitacaoEntrada.class
-moodle_pensamento/moodle/solicitacao/dto/SolicitacaoEntradaRequestDTO.class
+moodle_pensamento/moodle/security/UsuarioAutenticadoService.class
 moodle_pensamento/moodle/atividade/exception/AtividadeNaoEncontradaException.class
 moodle_pensamento/moodle/usuario/UsuarioService.class
 moodle_pensamento/moodle/matricula/MatriculaController.class
@@ -38,7 +42,9 @@ moodle_pensamento/moodle/matricula/exception/AlunoInvalidoException.class
 moodle_pensamento/moodle/matricula/MatriculaRepository.class
 moodle_pensamento/moodle/turma/StatusTurma.class
 moodle_pensamento/moodle/usuario/exception/UsuarioNaoEncontradoException.class
+moodle_pensamento/moodle/security/CustomUserDetailsService.class
 moodle_pensamento/moodle/aviso/StatusAviso.class
+moodle_pensamento/moodle/security/JwtService.class
 moodle_pensamento/moodle/solicitacao/SolicitacaoEntradaController.class
 moodle_pensamento/moodle/aviso/exception/ProfessorSemPermissaoException.class
 moodle_pensamento/moodle/solicitacao/dto/SolicitacaoEntradaResponseDTO.class
@@ -47,6 +53,7 @@ moodle_pensamento/moodle/usuario/dto/UsuarioRequestDTO.class
 moodle_pensamento/moodle/aviso/AvisoController.class
 moodle_pensamento/moodle/entrega/dto/EntregaAtividadeRequestDTO.class
 moodle_pensamento/moodle/aviso/AvisoService.class
+moodle_pensamento/moodle/auth/AuthController.class
 moodle_pensamento/moodle/usuario/UsuarioRepository.class
 moodle_pensamento/moodle/matricula/StatusMatricula.class
 moodle_pensamento/moodle/turma/TurmaController.class
@@ -64,6 +71,7 @@ moodle_pensamento/moodle/usuario/Usuario.class
 moodle_pensamento/moodle/usuario/exception/EmailJaCadastradoException.class
 moodle_pensamento/moodle/aviso/AvisoRepository.class
 moodle_pensamento/moodle/atividade/exception/ProfessorSemPermissaoException.class
+moodle_pensamento/moodle/auth/dto/LoginRequestDTO.class
 moodle_pensamento/moodle/usuario/dto/UsuarioResponseDTO.class
 moodle_pensamento/moodle/matricula/Matricula.class
 moodle_pensamento/moodle/solicitacao/exception/SolicitacaoJaExisteException.class

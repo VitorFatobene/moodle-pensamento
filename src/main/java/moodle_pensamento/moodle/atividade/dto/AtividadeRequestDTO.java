@@ -1,7 +1,6 @@
 package moodle_pensamento.moodle.atividade.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,9 +15,6 @@ public record AtividadeRequestDTO(
         LocalDateTime dataLimite,
 
         @Positive
-        BigDecimal notaMaxima,
-
-        @NotNull
-        Long professorId
+        BigDecimal notaMaxima
 ) {
 }

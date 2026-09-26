@@ -18,11 +18,10 @@ import moodle_pensamento.moodle.entrega.exception.EntregaNaoEncontradaException;
 import moodle_pensamento.moodle.matricula.MatriculaRepository;
 import moodle_pensamento.moodle.matricula.StatusMatricula;
 import moodle_pensamento.moodle.matricula.exception.AlunoInvalidoException;
+import moodle_pensamento.moodle.security.UsuarioAutenticadoService;
 import moodle_pensamento.moodle.turma.Turma;
-import moodle_pensamento.moodle.usuario.StatusUsuario;
 import moodle_pensamento.moodle.usuario.TipoUsuario;
 import moodle_pensamento.moodle.usuario.Usuario;
-import moodle_pensamento.moodle.usuario.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,16 +32,16 @@ public class EntregaAtividadeService {
 
     private final EntregaAtividadeRepository entregaAtividadeRepository;
     private final AtividadeRepository atividadeRepository;
-    private final UsuarioRepository usuarioRepository;
     private final MatriculaRepository matriculaRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     public EntregaAtividadeResponseDTO criarOuAtualizar(Long atividadeId, EntregaAtividadeRequestDTO dto) {
         Atividade atividade = buscarAtividadeAtiva(atividadeId);
-        Usuario aluno = buscarAlunoValido(dto.alunoId());
+        Usuario aluno = buscarAlunoAutenticado();
         validarMatriculaAtiva(aluno, atividade.getTurma());
 
         EntregaAtividade entrega = entregaAtividadeRepository
-                .findByAtividadeIdAndAlunoId(atividadeId, dto.alunoId())
+                .findByAtividadeIdAndAlunoId(atividadeId, aluno.getId())
                 .orElseGet(() -> criarEntregaPendente(atividade, aluno));
 
         entrega.setLinkEntrega(dto.linkEntrega());
@@ -51,10 +50,12 @@ public class EntregaAtividadeService {
         return toResponseDTO(entregaSalva);
     }
 
-    public EntregaAtividadeResponseDTO concluir(Long atividadeId, Long alunoId) {
+    public EntregaAtividadeResponseDTO concluir(Long atividadeId) {
+        Usuario aluno = buscarAlunoAutenticado();
+
         EntregaAtividade entrega = entregaAtividadeRepository
-                .findByAtividadeIdAndAlunoId(atividadeId, alunoId)
-                .orElseGet(() -> criarEntregaPendenteParaAluno(atividadeId, alunoId));
+                .findByAtividadeIdAndAlunoId(atividadeId, aluno.getId())
+                .orElseGet(() -> criarEntregaPendenteParaAluno(atividadeId, aluno));
 
         if (entrega.getStatus() == StatusEntrega.CONCLUIDA) {
             throw new EntregaJaConcluidaException(entrega.getId());
@@ -69,7 +70,8 @@ public class EntregaAtividadeService {
 
     @Transactional(readOnly = true)
     public List<EntregaAtividadeResponseDTO> listarPorAtividade(Long atividadeId) {
-        buscarAtividadeAtiva(atividadeId);
+        Atividade atividade = buscarAtividadeAtiva(atividadeId);
+        buscarProfessorAutenticadoComPermissao(atividade.getTurma());
 
         return entregaAtividadeRepository.findAllByAtividadeId(atividadeId)
                 .stream()
@@ -78,10 +80,10 @@ public class EntregaAtividadeService {
     }
 
     @Transactional(readOnly = true)
-    public List<EntregaAtividadeResponseDTO> listarPorAluno(Long alunoId) {
-        buscarAlunoValido(alunoId);
+    public List<EntregaAtividadeResponseDTO> listarMinhasEntregas() {
+        Usuario aluno = buscarAlunoAutenticado();
 
-        return entregaAtividadeRepository.findAllByAlunoId(alunoId)
+        return entregaAtividadeRepository.findAllByAlunoId(aluno.getId())
                 .stream()
                 .map(this::toResponseDTO)
                 .toList();
@@ -89,14 +91,13 @@ public class EntregaAtividadeService {
 
     public EntregaAtividadeResponseDTO atribuirNota(
             Long entregaId,
-            Long professorId,
             NotaEntregaRequestDTO dto
     ) {
         EntregaAtividade entrega = entregaAtividadeRepository.findById(entregaId)
                 .orElseThrow(() -> new EntregaNaoEncontradaException(entregaId));
 
         Atividade atividade = entrega.getAtividade();
-        buscarProfessorComPermissao(professorId, atividade.getTurma());
+        buscarProfessorAutenticadoComPermissao(atividade.getTurma());
 
         BigDecimal notaMaxima = atividade.getNotaMaxima();
 
@@ -114,9 +115,8 @@ public class EntregaAtividadeService {
         return toResponseDTO(entregaSalva);
     }
 
-    private EntregaAtividade criarEntregaPendenteParaAluno(Long atividadeId, Long alunoId) {
+    private EntregaAtividade criarEntregaPendenteParaAluno(Long atividadeId, Usuario aluno) {
         Atividade atividade = buscarAtividadeAtiva(atividadeId);
-        Usuario aluno = buscarAlunoValido(alunoId);
         validarMatriculaAtiva(aluno, atividade.getTurma());
 
         return criarEntregaPendente(atividade, aluno);
@@ -139,27 +139,25 @@ public class EntregaAtividadeService {
                 .orElseThrow(() -> new AtividadeNaoEncontradaException(atividadeId));
     }
 
-    private Usuario buscarAlunoValido(Long alunoId) {
-        Usuario aluno = usuarioRepository.findByIdAndStatus(alunoId, StatusUsuario.ATIVO)
-                .orElseThrow(() -> new AlunoInvalidoException(alunoId));
+    private Usuario buscarAlunoAutenticado() {
+        Usuario aluno = usuarioAutenticadoService.get();
 
         if (aluno.getTipoUsuario() != TipoUsuario.ALUNO) {
-            throw new AlunoInvalidoException(alunoId);
+            throw new AlunoInvalidoException(aluno.getId());
         }
 
         return aluno;
     }
 
-    private Usuario buscarProfessorComPermissao(Long professorId, Turma turma) {
-        Usuario professor = usuarioRepository.findByIdAndStatus(professorId, StatusUsuario.ATIVO)
-                .orElseThrow(() -> new ProfessorSemPermissaoException(professorId, turma.getId()));
+    private Usuario buscarProfessorAutenticadoComPermissao(Turma turma) {
+        Usuario professor = usuarioAutenticadoService.get();
 
         if (professor.getTipoUsuario() != TipoUsuario.PROFESSOR) {
-            throw new ProfessorSemPermissaoException(professorId, turma.getId());
+            throw new ProfessorSemPermissaoException(professor.getId(), turma.getId());
         }
 
         if (!turma.getProfessor().getId().equals(professor.getId())) {
-            throw new ProfessorSemPermissaoException(professorId, turma.getId());
+            throw new ProfessorSemPermissaoException(professor.getId(), turma.getId());
         }
 
         return professor;

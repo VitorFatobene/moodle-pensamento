@@ -3,15 +3,15 @@ package moodle_pensamento.moodle.turma;
 import java.security.SecureRandom;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import moodle_pensamento.moodle.security.UsuarioAutenticadoService;
 import moodle_pensamento.moodle.turma.dto.TurmaRequestDTO;
 import moodle_pensamento.moodle.turma.dto.TurmaResponseDTO;
 import moodle_pensamento.moodle.turma.exception.CodigoTurmaJaExisteException;
 import moodle_pensamento.moodle.turma.exception.ProfessorInvalidoException;
 import moodle_pensamento.moodle.turma.exception.TurmaNaoEncontradaException;
-import moodle_pensamento.moodle.usuario.StatusUsuario;
 import moodle_pensamento.moodle.usuario.TipoUsuario;
 import moodle_pensamento.moodle.usuario.Usuario;
-import moodle_pensamento.moodle.usuario.UsuarioRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +25,11 @@ public class TurmaService {
     private static final int MAX_TENTATIVAS_GERACAO_CODIGO = 20;
 
     private final TurmaRepository turmaRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public TurmaResponseDTO criar(TurmaRequestDTO dto) {
-        Usuario professor = buscarProfessorValido(dto.professorId());
+        Usuario professor = buscarProfessorAutenticado();
 
         Turma turma = new Turma(
                 null,
@@ -60,6 +60,12 @@ public class TurmaService {
 
     @Transactional(readOnly = true)
     public List<TurmaResponseDTO> listarPorProfessor(Long professorId) {
+        Usuario professor = buscarProfessorAutenticado();
+
+        if (!professor.getId().equals(professorId)) {
+            throw new AccessDeniedException("Professor só pode listar as próprias turmas por esta rota");
+        }
+
         return turmaRepository.findAllByProfessorIdAndStatus(professorId, StatusTurma.ATIVA)
                 .stream()
                 .map(this::toResponseDTO)
@@ -68,13 +74,10 @@ public class TurmaService {
 
     public TurmaResponseDTO atualizar(Long id, TurmaRequestDTO dto) {
         Turma turma = buscarEntidadeAtivaPorId(id);
+        validarProfessorAutenticadoResponsavel(turma);
 
         turma.setNome(dto.nome());
         turma.setDescricao(dto.descricao());
-
-        if (!turma.getProfessor().getId().equals(dto.professorId())) {
-            turma.setProfessor(buscarProfessorValido(dto.professorId()));
-        }
 
         Turma turmaSalva = turmaRepository.save(turma);
         return toResponseDTO(turmaSalva);
@@ -82,6 +85,7 @@ public class TurmaService {
 
     public void excluir(Long id) {
         Turma turma = buscarEntidadeAtivaPorId(id);
+        validarProfessorAutenticadoResponsavel(turma);
 
         turma.setStatus(StatusTurma.INATIVA);
         turmaRepository.save(turma);
@@ -92,15 +96,22 @@ public class TurmaService {
                 .orElseThrow(() -> new TurmaNaoEncontradaException(id));
     }
 
-    private Usuario buscarProfessorValido(Long professorId) {
-        Usuario professor = usuarioRepository.findByIdAndStatus(professorId, StatusUsuario.ATIVO)
-                .orElseThrow(() -> new ProfessorInvalidoException(professorId));
+    private Usuario buscarProfessorAutenticado() {
+        Usuario professor = usuarioAutenticadoService.get();
 
         if (professor.getTipoUsuario() != TipoUsuario.PROFESSOR) {
-            throw new ProfessorInvalidoException(professorId);
+            throw new ProfessorInvalidoException(professor.getId());
         }
 
         return professor;
+    }
+
+    private void validarProfessorAutenticadoResponsavel(Turma turma) {
+        Usuario professor = buscarProfessorAutenticado();
+
+        if (!turma.getProfessor().getId().equals(professor.getId())) {
+            throw new AccessDeniedException("Professor não é responsável pela turma");
+        }
     }
 
     private String gerarCodigoEntrada() {

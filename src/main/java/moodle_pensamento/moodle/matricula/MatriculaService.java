@@ -8,6 +8,7 @@ import moodle_pensamento.moodle.matricula.dto.MatriculaResponseDTO;
 import moodle_pensamento.moodle.matricula.exception.AlunoInvalidoException;
 import moodle_pensamento.moodle.matricula.exception.AlunoJaMatriculadoException;
 import moodle_pensamento.moodle.matricula.exception.MatriculaNaoEncontradaException;
+import moodle_pensamento.moodle.security.UsuarioAutenticadoService;
 import moodle_pensamento.moodle.turma.StatusTurma;
 import moodle_pensamento.moodle.turma.Turma;
 import moodle_pensamento.moodle.turma.TurmaRepository;
@@ -16,6 +17,7 @@ import moodle_pensamento.moodle.usuario.StatusUsuario;
 import moodle_pensamento.moodle.usuario.TipoUsuario;
 import moodle_pensamento.moodle.usuario.Usuario;
 import moodle_pensamento.moodle.usuario.UsuarioRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,10 +29,12 @@ public class MatriculaService {
     private final MatriculaRepository matriculaRepository;
     private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     public MatriculaResponseDTO criar(MatriculaRequestDTO dto) {
         Usuario aluno = buscarAlunoValido(dto.alunoId());
         Turma turma = buscarTurmaAtiva(dto.turmaId());
+        validarProfessorAutenticadoResponsavel(turma);
 
         return matriculaRepository.findByAlunoIdAndTurmaId(dto.alunoId(), dto.turmaId())
                 .map(matricula -> reativarOuFalhar(matricula, dto.alunoId(), dto.turmaId()))
@@ -39,7 +43,8 @@ public class MatriculaService {
 
     @Transactional(readOnly = true)
     public List<MatriculaResponseDTO> listarPorTurma(Long turmaId) {
-        buscarTurmaAtiva(turmaId);
+        Turma turma = buscarTurmaAtiva(turmaId);
+        validarProfessorAutenticadoResponsavel(turma);
 
         return matriculaRepository.findAllByTurmaIdAndStatus(turmaId, StatusMatricula.ATIVA)
                 .stream()
@@ -57,7 +62,21 @@ public class MatriculaService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<MatriculaResponseDTO> listarMinhasTurmas() {
+        Usuario aluno = usuarioAutenticadoService.get();
+
+        if (aluno.getTipoUsuario() != TipoUsuario.ALUNO) {
+            throw new AlunoInvalidoException(aluno.getId());
+        }
+
+        return listarPorAluno(aluno.getId());
+    }
+
     public void excluir(Long turmaId, Long alunoId) {
+        Turma turma = buscarTurmaAtiva(turmaId);
+        validarProfessorAutenticadoResponsavel(turma);
+
         Matricula matricula = matriculaRepository.findByAlunoIdAndTurmaIdAndStatus(
                         alunoId,
                         turmaId,
@@ -83,6 +102,15 @@ public class MatriculaService {
     private Turma buscarTurmaAtiva(Long turmaId) {
         return turmaRepository.findByIdAndStatus(turmaId, StatusTurma.ATIVA)
                 .orElseThrow(() -> new TurmaNaoEncontradaException(turmaId));
+    }
+
+    private void validarProfessorAutenticadoResponsavel(Turma turma) {
+        Usuario professor = usuarioAutenticadoService.get();
+
+        if (professor.getTipoUsuario() != TipoUsuario.PROFESSOR
+                || !turma.getProfessor().getId().equals(professor.getId())) {
+            throw new AccessDeniedException("Professor não é responsável pela turma");
+        }
     }
 
     private MatriculaResponseDTO reativarOuFalhar(Matricula matricula, Long alunoId, Long turmaId) {

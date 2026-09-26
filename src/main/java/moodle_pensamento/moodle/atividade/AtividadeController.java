@@ -7,6 +7,7 @@ import moodle_pensamento.moodle.atividade.dto.AtividadeRequestDTO;
 import moodle_pensamento.moodle.atividade.dto.AtividadeResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,7 @@ public class AtividadeController {
     private final AtividadeService atividadeService;
 
     @PostMapping("/turmas/{turmaId}/atividades")
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<AtividadeResponseDTO> criar(
             @PathVariable Long turmaId,
             @Valid @RequestBody AtividadeRequestDTO dto
@@ -31,16 +33,19 @@ public class AtividadeController {
     }
 
     @GetMapping("/turmas/{turmaId}/atividades")
+    @PreAuthorize("hasAnyRole('PROFESSOR', 'ALUNO')")
     public ResponseEntity<List<AtividadeResponseDTO>> listarPorTurma(@PathVariable Long turmaId) {
         return ResponseEntity.ok(atividadeService.listarPorTurma(turmaId));
     }
 
     @GetMapping("/atividades/{id}")
+    @PreAuthorize("hasAnyRole('PROFESSOR', 'ALUNO')")
     public ResponseEntity<AtividadeResponseDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(atividadeService.buscarPorId(id));
     }
 
     @PutMapping("/atividades/{id}")
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<AtividadeResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody AtividadeRequestDTO dto
@@ -49,6 +54,7 @@ public class AtividadeController {
     }
 
     @DeleteMapping("/atividades/{id}")
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         atividadeService.excluir(id);
         return ResponseEntity.noContent().build();

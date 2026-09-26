@@ -7,6 +7,7 @@ import moodle_pensamento.moodle.entrega.dto.EntregaAtividadeRequestDTO;
 import moodle_pensamento.moodle.entrega.dto.EntregaAtividadeResponseDTO;
 import moodle_pensamento.moodle.entrega.dto.NotaEntregaRequestDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +22,7 @@ public class EntregaAtividadeController {
     private final EntregaAtividadeService entregaAtividadeService;
 
     @PostMapping("/atividades/{atividadeId}/entregas")
+    @PreAuthorize("hasRole('ALUNO')")
     public ResponseEntity<EntregaAtividadeResponseDTO> criarOuAtualizar(
             @PathVariable Long atividadeId,
             @Valid @RequestBody EntregaAtividadeRequestDTO dto
@@ -28,32 +30,32 @@ public class EntregaAtividadeController {
         return ResponseEntity.ok(entregaAtividadeService.criarOuAtualizar(atividadeId, dto));
     }
 
-    @PatchMapping("/atividades/{atividadeId}/alunos/{alunoId}/concluir")
-    public ResponseEntity<EntregaAtividadeResponseDTO> concluir(
-            @PathVariable Long atividadeId,
-            @PathVariable Long alunoId
-    ) {
-        return ResponseEntity.ok(entregaAtividadeService.concluir(atividadeId, alunoId));
+    @PatchMapping("/atividades/{atividadeId}/concluir")
+    @PreAuthorize("hasRole('ALUNO')")
+    public ResponseEntity<EntregaAtividadeResponseDTO> concluir(@PathVariable Long atividadeId) {
+        return ResponseEntity.ok(entregaAtividadeService.concluir(atividadeId));
     }
 
     @GetMapping("/atividades/{atividadeId}/entregas")
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<List<EntregaAtividadeResponseDTO>> listarPorAtividade(
             @PathVariable Long atividadeId
     ) {
         return ResponseEntity.ok(entregaAtividadeService.listarPorAtividade(atividadeId));
     }
 
-    @GetMapping("/usuarios/{alunoId}/entregas")
-    public ResponseEntity<List<EntregaAtividadeResponseDTO>> listarPorAluno(@PathVariable Long alunoId) {
-        return ResponseEntity.ok(entregaAtividadeService.listarPorAluno(alunoId));
+    @GetMapping("/minhas-entregas")
+    @PreAuthorize("hasRole('ALUNO')")
+    public ResponseEntity<List<EntregaAtividadeResponseDTO>> listarMinhasEntregas() {
+        return ResponseEntity.ok(entregaAtividadeService.listarMinhasEntregas());
     }
 
-    @PatchMapping("/entregas/{entregaId}/nota/{professorId}")
+    @PatchMapping("/entregas/{entregaId}/nota")
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<EntregaAtividadeResponseDTO> atribuirNota(
             @PathVariable Long entregaId,
-            @PathVariable Long professorId,
             @Valid @RequestBody NotaEntregaRequestDTO dto
     ) {
-        return ResponseEntity.ok(entregaAtividadeService.atribuirNota(entregaId, professorId, dto));
+        return ResponseEntity.ok(entregaAtividadeService.atribuirNota(entregaId, dto));
     }
 }

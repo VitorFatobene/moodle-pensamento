@@ -6,6 +6,7 @@ import moodle_pensamento.moodle.usuario.dto.UsuarioRequestDTO;
 import moodle_pensamento.moodle.usuario.dto.UsuarioResponseDTO;
 import moodle_pensamento.moodle.usuario.exception.EmailJaCadastradoException;
 import moodle_pensamento.moodle.usuario.exception.UsuarioNaoEncontradoException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioResponseDTO criar(UsuarioRequestDTO dto) {
         if (usuarioRepository.existsByEmail(dto.email())) {
@@ -81,7 +83,7 @@ public class UsuarioService {
                 null,
                 dto.nome(),
                 dto.email(),
-                dto.senha(),
+                passwordEncoder.encode(dto.senha()),
                 dto.tipoUsuario(),
                 StatusUsuario.ATIVO
         );
@@ -90,7 +92,7 @@ public class UsuarioService {
     private void atualizarEntidade(Usuario usuario, UsuarioRequestDTO dto) {
         usuario.setNome(dto.nome());
         usuario.setEmail(dto.email());
-        usuario.setSenha(dto.senha());
+        usuario.setSenha(passwordEncoder.encode(dto.senha()));
         usuario.setTipoUsuario(dto.tipoUsuario());
     }
 }

@@ -7,6 +7,7 @@ import moodle_pensamento.moodle.turma.dto.TurmaRequestDTO;
 import moodle_pensamento.moodle.turma.dto.TurmaResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,7 @@ public class TurmaController {
     private final TurmaService turmaService;
 
     @PostMapping
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<TurmaResponseDTO> criar(@Valid @RequestBody TurmaRequestDTO dto) {
         TurmaResponseDTO turma = turmaService.criar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(turma);
@@ -40,11 +42,13 @@ public class TurmaController {
     }
 
     @GetMapping("/professor/{professorId}")
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<List<TurmaResponseDTO>> listarPorProfessor(@PathVariable Long professorId) {
         return ResponseEntity.ok(turmaService.listarPorProfessor(professorId));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<TurmaResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody TurmaRequestDTO dto
@@ -53,6 +57,7 @@ public class TurmaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PROFESSOR')")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         turmaService.excluir(id);
         return ResponseEntity.noContent().build();

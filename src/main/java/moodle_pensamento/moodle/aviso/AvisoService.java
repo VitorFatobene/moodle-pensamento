@@ -7,14 +7,16 @@ import moodle_pensamento.moodle.aviso.dto.AvisoRequestDTO;
 import moodle_pensamento.moodle.aviso.dto.AvisoResponseDTO;
 import moodle_pensamento.moodle.aviso.exception.AvisoNaoEncontradoException;
 import moodle_pensamento.moodle.aviso.exception.ProfessorSemPermissaoException;
+import moodle_pensamento.moodle.matricula.MatriculaRepository;
+import moodle_pensamento.moodle.matricula.StatusMatricula;
+import moodle_pensamento.moodle.security.UsuarioAutenticadoService;
 import moodle_pensamento.moodle.turma.StatusTurma;
 import moodle_pensamento.moodle.turma.Turma;
 import moodle_pensamento.moodle.turma.TurmaRepository;
 import moodle_pensamento.moodle.turma.exception.TurmaNaoEncontradaException;
-import moodle_pensamento.moodle.usuario.StatusUsuario;
 import moodle_pensamento.moodle.usuario.TipoUsuario;
 import moodle_pensamento.moodle.usuario.Usuario;
-import moodle_pensamento.moodle.usuario.UsuarioRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +27,12 @@ public class AvisoService {
 
     private final AvisoRepository avisoRepository;
     private final TurmaRepository turmaRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final MatriculaRepository matriculaRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     public AvisoResponseDTO criar(Long turmaId, AvisoRequestDTO dto) {
         Turma turma = buscarTurmaAtiva(turmaId);
-        Usuario professor = buscarProfessorComPermissao(dto.professorId(), turma);
+        Usuario professor = buscarProfessorAutenticadoComPermissao(turma);
 
         Aviso aviso = new Aviso(
                 null,
@@ -48,7 +51,8 @@ public class AvisoService {
 
     @Transactional(readOnly = true)
     public List<AvisoResponseDTO> listarPorTurma(Long turmaId) {
-        buscarTurmaAtiva(turmaId);
+        Turma turma = buscarTurmaAtiva(turmaId);
+        validarLeituraPermitida(turma);
 
         return avisoRepository.findAllByTurmaIdAndStatus(turmaId, StatusAviso.ATIVO)
                 .stream()
@@ -59,12 +63,13 @@ public class AvisoService {
     @Transactional(readOnly = true)
     public AvisoResponseDTO buscarPorId(Long id) {
         Aviso aviso = buscarAvisoAtivo(id);
+        validarLeituraPermitida(aviso.getTurma());
         return toResponseDTO(aviso);
     }
 
     public AvisoResponseDTO atualizar(Long id, AvisoRequestDTO dto) {
         Aviso aviso = buscarAvisoAtivo(id);
-        buscarProfessorComPermissao(dto.professorId(), aviso.getTurma());
+        buscarProfessorAutenticadoComPermissao(aviso.getTurma());
 
         aviso.setTitulo(dto.titulo());
         aviso.setConteudo(dto.conteudo());
@@ -76,7 +81,7 @@ public class AvisoService {
 
     public void excluir(Long id) {
         Aviso aviso = buscarAvisoAtivo(id);
-        validarProfessorResponsavel(aviso.getProfessor(), aviso.getTurma());
+        buscarProfessorAutenticadoComPermissao(aviso.getTurma());
 
         aviso.setStatus(StatusAviso.INATIVO);
         avisoRepository.save(aviso);
@@ -92,12 +97,11 @@ public class AvisoService {
                 .orElseThrow(() -> new TurmaNaoEncontradaException(turmaId));
     }
 
-    private Usuario buscarProfessorComPermissao(Long professorId, Turma turma) {
-        Usuario professor = usuarioRepository.findByIdAndStatus(professorId, StatusUsuario.ATIVO)
-                .orElseThrow(() -> new ProfessorSemPermissaoException(professorId, turma.getId()));
+    private Usuario buscarProfessorAutenticadoComPermissao(Turma turma) {
+        Usuario professor = usuarioAutenticadoService.get();
 
         if (professor.getTipoUsuario() != TipoUsuario.PROFESSOR) {
-            throw new ProfessorSemPermissaoException(professorId, turma.getId());
+            throw new ProfessorSemPermissaoException(professor.getId(), turma.getId());
         }
 
         validarProfessorResponsavel(professor, turma);
@@ -107,6 +111,24 @@ public class AvisoService {
     private void validarProfessorResponsavel(Usuario professor, Turma turma) {
         if (!turma.getProfessor().getId().equals(professor.getId())) {
             throw new ProfessorSemPermissaoException(professor.getId(), turma.getId());
+        }
+    }
+
+    private void validarLeituraPermitida(Turma turma) {
+        Usuario usuario = usuarioAutenticadoService.get();
+
+        if (usuario.getTipoUsuario() == TipoUsuario.PROFESSOR) {
+            return;
+        }
+
+        boolean matriculado = matriculaRepository.existsByAlunoIdAndTurmaIdAndStatus(
+                usuario.getId(),
+                turma.getId(),
+                StatusMatricula.ATIVA
+        );
+
+        if (!matriculado) {
+            throw new AccessDeniedException("Aluno não possui matrícula ativa na turma");
         }
     }
 
