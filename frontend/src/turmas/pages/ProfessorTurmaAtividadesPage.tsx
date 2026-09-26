@@ -262,6 +262,7 @@ export function ProfessorTurmaAtividadesPage() {
                 key={atividade.id}
                 atividade={atividade}
                 isProcessing={processingAtividadeId === atividade.id}
+                entregasTo={`/professor/turmas/${atividade.turmaId}/atividades/${atividade.id}/entregas`}
                 onEdit={abrirEdicao}
                 onDelete={(atividadeId) => void handleExcluirAtividade(atividadeId)}
               />

@@ -17,6 +17,9 @@ export function AlunoHomePage() {
       <Link className="text-link" to="/aluno/turmas">
         Ver turmas
       </Link>
+      <Link className="text-link" to="/aluno/solicitacoes">
+        Solicitações
+      </Link>
       <button type="button" onClick={handleLogout}>
         Sair
       </button>

@@ -20,6 +20,7 @@ api.interceptors.response.use(
   (error: unknown) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       clearAuth()
+      window.dispatchEvent(new Event('moodle:unauthorized'))
     }
 
     return Promise.reject(error)

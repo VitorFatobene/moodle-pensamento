@@ -6,6 +6,11 @@ export async function listarTurmas(): Promise<Turma[]> {
   return response.data
 }
 
+export async function listarTurmasDoProfessor(professorId: number): Promise<Turma[]> {
+  const response = await api.get<Turma[]>(`/turmas/professor/${professorId}`)
+  return response.data
+}
+
 export async function criarTurma(dados: CriarTurmaRequest): Promise<Turma> {
   const response = await api.post<Turma>('/turmas', dados)
   return response.data

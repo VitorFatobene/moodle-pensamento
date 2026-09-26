@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import * as authService from '../services/authService'
 import {
   clearAuth,
@@ -45,6 +45,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user: null,
       token: null,
     })
+  }, [])
+
+  useEffect(() => {
+    function handleUnauthorized() {
+      setAuthState({
+        user: null,
+        token: null,
+      })
+    }
+
+    window.addEventListener('moodle:unauthorized', handleUnauthorized)
+
+    return () => {
+      window.removeEventListener('moodle:unauthorized', handleUnauthorized)
+    }
   }, [])
 
   const value = useMemo<AuthContextData>(

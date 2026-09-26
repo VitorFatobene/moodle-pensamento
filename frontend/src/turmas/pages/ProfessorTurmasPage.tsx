@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { CriarTurmaForm } from '../components/CriarTurmaForm'
 import { TurmaCard } from '../components/TurmaCard'
-import { criarTurma, listarTurmas } from '../services/turmaService'
+import { criarTurma, listarTurmasDoProfessor } from '../services/turmaService'
 import type { CriarTurmaRequest, Turma } from '../types/turma.types'
 
 export function ProfessorTurmasPage() {
+  const { user } = useAuth()
   const [turmas, setTurmas] = useState<Turma[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -15,23 +17,33 @@ export function ProfessorTurmasPage() {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
   const carregarTurmas = useCallback(async () => {
+    if (!user) {
+      setLoadError('Sessão não encontrada.')
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     setLoadError(null)
 
     try {
-      const data = await listarTurmas()
+      const data = await listarTurmasDoProfessor(user.id)
       setTurmas(data)
     } catch {
       setLoadError('Não foi possível carregar as turmas.')
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
+    if (!user) {
+      return
+    }
+
     let isActive = true
 
-    listarTurmas()
+    listarTurmasDoProfessor(user.id)
       .then((data) => {
         if (isActive) {
           setTurmas(data)
@@ -51,7 +63,7 @@ export function ProfessorTurmasPage() {
     return () => {
       isActive = false
     }
-  }, [])
+  }, [user])
 
   async function handleCriarTurma(dados: CriarTurmaRequest) {
     setIsCreating(true)

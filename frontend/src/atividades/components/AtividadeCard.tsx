@@ -3,14 +3,18 @@ import type { Atividade } from '../types/atividade.types'
 
 interface AtividadeCardProps {
   atividade: Atividade
-  isProcessing: boolean
-  onEdit: (atividade: Atividade) => void
-  onDelete: (atividadeId: number) => void
+  isProcessing?: boolean
+  detalhesTo?: string
+  entregasTo?: string
+  onEdit?: (atividade: Atividade) => void
+  onDelete?: (atividadeId: number) => void
 }
 
 export function AtividadeCard({
   atividade,
   isProcessing,
+  detalhesTo,
+  entregasTo,
   onEdit,
   onDelete,
 }: AtividadeCardProps) {
@@ -39,27 +43,35 @@ export function AtividadeCard({
       </dl>
 
       <div className="form-actions">
-        <Link
-          className="text-link"
-          to={`/professor/turmas/${atividade.turmaId}/atividades/${atividade.id}/entregas`}
-        >
-          Ver entregas
-        </Link>
-        <button
-          type="button"
-          className="secondary-button"
-          disabled={isProcessing}
-          onClick={() => onEdit(atividade)}
-        >
-          Editar
-        </button>
-        <button
-          type="button"
-          disabled={isProcessing}
-          onClick={() => onDelete(atividade.id)}
-        >
-          {isProcessing ? 'Excluindo...' : 'Excluir'}
-        </button>
+        {detalhesTo ? (
+          <Link className="text-link" to={detalhesTo}>
+            Ver atividade
+          </Link>
+        ) : null}
+        {entregasTo ? (
+          <Link className="text-link" to={entregasTo}>
+            Ver entregas
+          </Link>
+        ) : null}
+        {onEdit ? (
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={isProcessing}
+            onClick={() => onEdit(atividade)}
+          >
+            Editar
+          </button>
+        ) : null}
+        {onDelete ? (
+          <button
+            type="button"
+            disabled={isProcessing}
+            onClick={() => onDelete(atividade.id)}
+          >
+            {isProcessing ? 'Excluindo...' : 'Excluir'}
+          </button>
+        ) : null}
       </div>
     </article>
   )

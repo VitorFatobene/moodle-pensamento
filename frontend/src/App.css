@@ -196,13 +196,15 @@ label {
   font-weight: 600;
 }
 
-input {
+input,
+select {
   width: 100%;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   padding: 10px 12px;
   color: #111827;
   font: inherit;
+  background: #ffffff;
 }
 
 textarea {
@@ -216,6 +218,7 @@ textarea {
 }
 
 input:focus,
+select:focus,
 textarea:focus {
   border-color: #2563eb;
   outline: 3px solid rgba(37, 99, 235, 0.16);

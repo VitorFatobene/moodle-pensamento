@@ -2,9 +2,9 @@ import type { Aviso } from '../types/aviso.types'
 
 interface AvisoCardProps {
   aviso: Aviso
-  isProcessing: boolean
-  onEdit: (aviso: Aviso) => void
-  onDelete: (avisoId: number) => void
+  isProcessing?: boolean
+  onEdit?: (aviso: Aviso) => void
+  onDelete?: (avisoId: number) => void
 }
 
 export function AvisoCard({ aviso, isProcessing, onEdit, onDelete }: AvisoCardProps) {
@@ -34,19 +34,25 @@ export function AvisoCard({ aviso, isProcessing, onEdit, onDelete }: AvisoCardPr
         ) : null}
       </dl>
 
-      <div className="form-actions">
-        <button
-          type="button"
-          className="secondary-button"
-          disabled={isProcessing}
-          onClick={() => onEdit(aviso)}
-        >
-          Editar
-        </button>
-        <button type="button" disabled={isProcessing} onClick={() => onDelete(aviso.id)}>
-          {isProcessing ? 'Excluindo...' : 'Excluir'}
-        </button>
-      </div>
+      {onEdit && onDelete ? (
+        <div className="form-actions">
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={isProcessing}
+            onClick={() => onEdit(aviso)}
+          >
+            Editar
+          </button>
+          <button
+            type="button"
+            disabled={isProcessing}
+            onClick={() => onDelete(aviso.id)}
+          >
+            {isProcessing ? 'Excluindo...' : 'Excluir'}
+          </button>
+        </div>
+      ) : null}
     </article>
   )
 }

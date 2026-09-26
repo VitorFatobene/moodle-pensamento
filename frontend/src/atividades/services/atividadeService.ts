@@ -8,6 +8,11 @@ export async function listarAtividadesDaTurma(
   return response.data
 }
 
+export async function buscarAtividadePorId(atividadeId: number): Promise<Atividade> {
+  const response = await api.get<Atividade>(`/atividades/${atividadeId}`)
+  return response.data
+}
+
 export async function criarAtividade(
   turmaId: number,
   dados: AtividadeRequest,

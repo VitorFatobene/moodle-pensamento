@@ -15,3 +15,7 @@ export interface EntregaAtividade {
 export interface NotaEntregaRequest {
   nota: number
 }
+
+export interface EntregaAtividadeRequest {
+  linkEntrega: string | null
+}
