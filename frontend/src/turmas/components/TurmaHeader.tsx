@@ -1,4 +1,6 @@
 import { NavLink } from 'react-router-dom'
+import { StatusBadge } from '../../components/StatusBadge'
+import { TurmaAccessCode } from './TurmaAccessCode'
 import type { Turma } from '../types/turma.types'
 
 interface TurmaHeaderProps {
@@ -10,18 +12,19 @@ export function TurmaHeader({ turma }: TurmaHeaderProps) {
 
   return (
     <header className="turma-detail-header">
-      <div className="turma-detail-title">
-        <h1>{turma.nome}</h1>
-        <span className="turma-status">{turma.status}</span>
+      <div className="turma-detail-main">
+        <div className="turma-detail-title">
+          <h1>{turma.nome}</h1>
+          <StatusBadge value={turma.status} />
+        </div>
+        <p>{turma.descricao || 'Sem descrição informada.'}</p>
       </div>
 
-      <p>{turma.descricao || 'Sem descrição informada.'}</p>
+      <div className="turma-detail-tools">
+        <TurmaAccessCode code={turma.codigoEntrada} />
+      </div>
 
       <dl className="turma-meta turma-detail-meta">
-        <div>
-          <dt>Código de entrada</dt>
-          <dd>{turma.codigoEntrada}</dd>
-        </div>
         <div>
           <dt>Professor</dt>
           <dd>{turma.professorNome}</dd>

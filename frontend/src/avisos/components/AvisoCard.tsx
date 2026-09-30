@@ -1,25 +1,38 @@
+import { StatusBadge } from '../../components/StatusBadge'
 import type { Aviso } from '../types/aviso.types'
 
 interface AvisoCardProps {
   aviso: Aviso
   isProcessing?: boolean
+  variant?: 'admin' | 'reading'
   onEdit?: (aviso: Aviso) => void
   onDelete?: (avisoId: number) => void
 }
 
-export function AvisoCard({ aviso, isProcessing, onEdit, onDelete }: AvisoCardProps) {
+export function AvisoCard({
+  aviso,
+  isProcessing,
+  variant,
+  onEdit,
+  onDelete,
+}: AvisoCardProps) {
+  const hasActions = Boolean(onEdit && onDelete)
+  const cardVariant = variant ?? (hasActions ? 'admin' : 'reading')
+
   return (
-    <article className="turma-card">
-      <div className="turma-card-header">
-        <h2>{aviso.titulo}</h2>
-        <span className="turma-status">{aviso.status}</span>
+    <article className={`turma-card aviso-card aviso-card--${cardVariant}`}>
+      <div className="aviso-card-main">
+        <div className="turma-card-header aviso-card-header">
+          <h2>{aviso.titulo}</h2>
+          {cardVariant === 'admin' ? <StatusBadge value={aviso.status} /> : null}
+        </div>
+
+        <p className="aviso-card-content">{aviso.conteudo}</p>
       </div>
 
-      <p>{aviso.conteudo}</p>
-
-      <dl className="turma-meta">
+      <dl className="turma-meta aviso-card-meta" aria-label="Informações do aviso">
         <div>
-          <dt>Professor</dt>
+          <dt>Publicado por</dt>
           <dd>{aviso.professorNome}</dd>
         </div>
         <div>
@@ -35,10 +48,10 @@ export function AvisoCard({ aviso, isProcessing, onEdit, onDelete }: AvisoCardPr
       </dl>
 
       {onEdit && onDelete ? (
-        <div className="form-actions">
+        <div className="form-actions aviso-card-actions" aria-label="Ações do aviso">
           <button
             type="button"
-            className="secondary-button"
+            className="ghost-button"
             disabled={isProcessing}
             onClick={() => onEdit(aviso)}
           >
@@ -46,6 +59,7 @@ export function AvisoCard({ aviso, isProcessing, onEdit, onDelete }: AvisoCardPr
           </button>
           <button
             type="button"
+            className="danger-button"
             disabled={isProcessing}
             onClick={() => onDelete(aviso.id)}
           >

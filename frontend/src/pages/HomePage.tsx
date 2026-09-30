@@ -1,8 +1,10 @@
 export function HomePage() {
   return (
-    <main>
-      <h1>Moodle</h1>
-      <p>Frontend iniciado com sucesso.</p>
+    <main className="auth-page">
+      <section className="login-form">
+        <h1>Moodle</h1>
+        <p>Frontend iniciado com sucesso.</p>
+      </section>
     </main>
   )
 }

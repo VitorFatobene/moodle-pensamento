@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useParams } from 'react-router-dom'
+import { EmptyState } from '../../components/EmptyState'
+import { LoadingState } from '../../components/LoadingState'
 import { AlunoMatriculadoCard } from '../../matriculas/components/AlunoMatriculadoCard'
 import {
   listarAlunosDaTurma,
@@ -118,7 +120,7 @@ export function ProfessorTurmaAlunosPage() {
         {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
         {removeError ? <p className="form-error">{removeError}</p> : null}
 
-        {isLoading ? <p>Carregando alunos...</p> : null}
+        {isLoading ? <LoadingState>Carregando alunos...</LoadingState> : null}
 
         {!isLoading && loadError ? (
           <>
@@ -132,7 +134,7 @@ export function ProfessorTurmaAlunosPage() {
         ) : null}
 
         {!isLoading && !loadError && alunos.length === 0 ? (
-          <p>Não há alunos matriculados nesta turma.</p>
+          <EmptyState>Não há alunos matriculados nesta turma.</EmptyState>
         ) : null}
 
         {!isLoading && !loadError && alunos.length > 0 ? (

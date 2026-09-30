@@ -1,3 +1,4 @@
+import { StatusBadge } from '../../components/StatusBadge'
 import type { Matricula } from '../types/matricula.types'
 
 interface AlunoMatriculadoCardProps {
@@ -15,7 +16,7 @@ export function AlunoMatriculadoCard({
     <article className="turma-card">
       <div className="turma-card-header">
         <h2>{matricula.alunoNome}</h2>
-        <span className="turma-status">{matricula.status}</span>
+        <StatusBadge value={matricula.status} />
       </div>
 
       <dl className="turma-meta">
@@ -27,6 +28,7 @@ export function AlunoMatriculadoCard({
 
       <button
         type="button"
+        className="danger-button"
         disabled={isRemoving}
         onClick={() => onRemove(matricula.alunoId)}
       >

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
+import { EmptyState } from '../../components/EmptyState'
+import { LoadingState } from '../../components/LoadingState'
 import { listarTurmas } from '../../turmas/services/turmaService'
 import type { Turma } from '../../turmas/types/turma.types'
 import { SolicitacaoCard } from '../components/SolicitacaoCard'
@@ -114,13 +116,19 @@ export function AlunoSolicitacoesPage() {
       </header>
 
       <section className="section-panel">
-        <h2>Nova solicitação</h2>
-        <p>Selecione uma turma disponível para solicitar entrada.</p>
+        <div className="panel-header">
+          <div>
+            <h2>Nova solicitação</h2>
+            <p>Selecione uma turma disponível para solicitar entrada.</p>
+          </div>
+        </div>
 
-        {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
-        {submitError ? <p className="form-error">{submitError}</p> : null}
+        <div className="feedback-stack" aria-live="polite">
+          {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
+          {submitError ? <p className="form-error">{submitError}</p> : null}
+        </div>
         {!isLoadingTurmas && turmas.length === 0 ? (
-          <p>Não há turmas disponíveis para solicitação no momento.</p>
+          <EmptyState>Não há turmas disponíveis para solicitação no momento.</EmptyState>
         ) : null}
 
         <SolicitarEntradaForm
@@ -132,12 +140,17 @@ export function AlunoSolicitacoesPage() {
       </section>
 
       <section className="section-panel">
-        <h2>Minhas solicitações</h2>
+        <div className="panel-header">
+          <div>
+            <h2>Minhas solicitações</h2>
+            <p>Confira o histórico e o estado de cada pedido de entrada.</p>
+          </div>
+        </div>
 
-        {isLoading ? <p>Carregando solicitações...</p> : null}
+        {isLoading ? <LoadingState>Carregando solicitações...</LoadingState> : null}
 
         {!isLoading && loadError ? (
-          <>
+          <div className="state-panel state-panel--error">
             <p className="form-error">{loadError}</p>
             <button
               type="button"
@@ -148,15 +161,17 @@ export function AlunoSolicitacoesPage() {
             >
               Tentar novamente
             </button>
-          </>
+          </div>
         ) : null}
 
         {!isLoading && !loadError && solicitacoes.length === 0 ? (
-          <p>Você ainda não realizou nenhuma solicitação de entrada.</p>
+          <EmptyState title="Nenhuma solicitação registrada">
+            Você ainda não realizou nenhuma solicitação de entrada.
+          </EmptyState>
         ) : null}
 
         {!isLoading && !loadError && solicitacoes.length > 0 ? (
-          <div className="turmas-grid" aria-label="Lista de solicitações">
+          <div className="solicitacoes-list" aria-label="Lista de solicitações">
             {solicitacoes.map((solicitacao) => (
               <SolicitacaoCard key={solicitacao.id} solicitacao={solicitacao} />
             ))}

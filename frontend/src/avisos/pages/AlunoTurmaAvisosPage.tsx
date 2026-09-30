@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useParams } from 'react-router-dom'
+import { EmptyState } from '../../components/EmptyState'
+import { LoadingState } from '../../components/LoadingState'
 import { TurmaPlaceholderAluno } from '../../turmas/components/TurmaPlaceholderAluno'
 import { AvisoCard } from '../components/AvisoCard'
 import { listarAvisosDaTurma } from '../services/avisoService'
@@ -79,29 +81,36 @@ export function AlunoTurmaAvisosPage() {
       <TurmaPlaceholderAluno />
 
       <section className="section-panel">
-        <h1>Avisos da turma</h1>
+        <div className="panel-header">
+          <div>
+            <h1>Avisos da turma</h1>
+            <p>Leia os comunicados publicados pelo professor para esta turma.</p>
+          </div>
+        </div>
 
-        {isLoading ? <p>Carregando avisos...</p> : null}
+        {isLoading ? <LoadingState>Carregando avisos...</LoadingState> : null}
 
         {!isLoading && loadError ? (
-          <>
+          <div className="state-panel state-panel--error">
             <p className="form-error">{loadError}</p>
             {id ? (
               <button type="button" onClick={() => void carregarAvisos()}>
                 Tentar novamente
               </button>
             ) : null}
-          </>
+          </div>
         ) : null}
 
         {!isLoading && !loadError && avisos.length === 0 ? (
-          <p>Não há avisos publicados nesta turma.</p>
+          <EmptyState title="Mural sem publicações">
+            Não há avisos publicados nesta turma.
+          </EmptyState>
         ) : null}
 
         {!isLoading && !loadError && avisos.length > 0 ? (
-          <div className="turmas-grid" aria-label="Lista de avisos">
+          <div className="avisos-list avisos-list--reading" aria-label="Lista de avisos">
             {avisos.map((aviso) => (
-              <AvisoCard key={aviso.id} aviso={aviso} />
+              <AvisoCard key={aviso.id} aviso={aviso} variant="reading" />
             ))}
           </div>
         ) : null}

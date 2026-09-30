@@ -57,6 +57,7 @@ export function AvisoForm({
           value={titulo}
           onChange={(event) => setTitulo(event.target.value)}
           disabled={isSubmitting}
+          placeholder="Ex.: Alteração no prazo da atividade"
           required
         />
       </label>
@@ -67,6 +68,7 @@ export function AvisoForm({
           value={conteudo}
           onChange={(event) => setConteudo(event.target.value)}
           disabled={isSubmitting}
+          placeholder="Escreva o comunicado para a turma."
           rows={5}
           required
         />
@@ -75,7 +77,12 @@ export function AvisoForm({
       {validationError ? <p className="form-error">{validationError}</p> : null}
 
       <div className="form-actions">
-        <button type="button" className="secondary-button" onClick={onCancel}>
+        <button
+          type="button"
+          className="secondary-button"
+          disabled={isSubmitting}
+          onClick={onCancel}
+        >
           Cancelar
         </button>
         <button type="submit" disabled={isSubmitting}>

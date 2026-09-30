@@ -3,6 +3,8 @@ import { isAxiosError } from 'axios'
 import { useParams } from 'react-router-dom'
 import { AtividadeCard } from '../../atividades/components/AtividadeCard'
 import { AtividadeForm } from '../../atividades/components/AtividadeForm'
+import { EmptyState } from '../../components/EmptyState'
+import { LoadingState } from '../../components/LoadingState'
 import {
   atualizarAtividade,
   criarAtividade,
@@ -17,6 +19,22 @@ import { TurmaPlaceholderNav } from '../components/TurmaPlaceholderNav'
 
 export function ProfessorTurmaAtividadesPage() {
   const { turmaId } = useParams()
+
+  return (
+    <ProfessorTurmaAtividadesContent
+      key={turmaId ?? 'turma-invalida'}
+      turmaId={turmaId}
+    />
+  )
+}
+
+interface ProfessorTurmaAtividadesContentProps {
+  turmaId: string | undefined
+}
+
+function ProfessorTurmaAtividadesContent({
+  turmaId,
+}: ProfessorTurmaAtividadesContentProps) {
   const id = parseTurmaId(turmaId)
   const [atividades, setAtividades] = useState<Atividade[]>([])
   const [isLoading, setIsLoading] = useState(Boolean(id))
@@ -196,67 +214,105 @@ export function ProfessorTurmaAtividadesPage() {
         notaMaxima: editingAtividade.notaMaxima,
       }
     : undefined
+  const atividadesAtivas = atividades.filter(
+    (atividade) => atividade.status === 'ATIVA',
+  ).length
 
   return (
     <main className="page-shell">
       <TurmaPlaceholderNav />
 
-      <section className="section-panel">
-        <h1>Atividades da turma</h1>
+      <header className="page-header atividades-page-header">
+        <div>
+          <h1>Atividades da turma</h1>
+          <p>Organize prazos, notas e entregas em um único fluxo.</p>
+        </div>
+        {!isLoading && !isFormOpen && !loadError && id ? (
+          <button type="button" onClick={abrirCriacao}>
+            Nova atividade
+          </button>
+        ) : null}
+      </header>
 
+      <div className="feedback-stack" aria-live="polite">
         {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
-        {operationError ? <p className="form-error">{operationError}</p> : null}
+        {operationError ? (
+          <p className="form-error" role="alert">
+            {operationError}
+          </p>
+        ) : null}
+      </div>
 
-        {!isFormOpen && !loadError && atividades.length > 0 ? (
-          <div className="form-actions">
-            <button type="button" onClick={abrirCriacao}>
-              Nova atividade
-            </button>
+      {isFormOpen ? (
+        <section
+          className={`atividade-form-panel${editingAtividade ? ' atividade-form-panel--editing' : ''}`}
+        >
+          <div className="panel-header">
+            <div>
+              <h2>{editingAtividade ? 'Editar atividade' : 'Nova atividade'}</h2>
+              <p>
+                {editingAtividade
+                  ? 'Atualize as instruções, o prazo ou a nota máxima.'
+                  : 'Defina as instruções e regras que os alunos devem acompanhar.'}
+              </p>
+            </div>
           </div>
-        ) : null}
+          <AtividadeForm
+            key={editingAtividade?.id ?? 'new'}
+            initialValues={initialFormValues}
+            isSubmitting={isSubmitting}
+            submitLabel={editingAtividade ? 'Salvar alterações' : 'Criar atividade'}
+            onCancel={fecharFormulario}
+            onSubmit={editingAtividade ? handleAtualizarAtividade : handleCriarAtividade}
+          />
+        </section>
+      ) : null}
 
-        {isFormOpen ? (
-          <>
-            <h2>{editingAtividade ? 'Editar atividade' : 'Nova atividade'}</h2>
-            <AtividadeForm
-              key={editingAtividade?.id ?? 'new'}
-              initialValues={initialFormValues}
-              isSubmitting={isSubmitting}
-              submitLabel={editingAtividade ? 'Salvar alterações' : 'Criar atividade'}
-              onCancel={fecharFormulario}
-              onSubmit={
-                editingAtividade ? handleAtualizarAtividade : handleCriarAtividade
-              }
-            />
-          </>
-        ) : null}
+      {isLoading ? (
+        <section className="section-panel state-panel">
+          <LoadingState>Carregando atividades...</LoadingState>
+        </section>
+      ) : null}
 
-        {isLoading ? <p>Carregando atividades...</p> : null}
+      {!isLoading && loadError ? (
+        <section className="section-panel state-panel state-panel--error">
+          <p className="form-error" role="alert">
+            {loadError}
+          </p>
+          {id ? (
+            <button type="button" onClick={() => void carregarAtividades()}>
+              Tentar novamente
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
-        {!isLoading && loadError ? (
-          <>
-            <p className="form-error">{loadError}</p>
-            {id ? (
-              <button type="button" onClick={() => void carregarAtividades()}>
-                Tentar novamente
-              </button>
-            ) : null}
-          </>
-        ) : null}
+      {!isLoading && !loadError && atividades.length === 0 ? (
+        <section className="section-panel atividade-empty">
+          <EmptyState title="Nenhuma atividade publicada">
+            Crie a primeira atividade para informar instruções, prazo e nota máxima.
+          </EmptyState>
+          {!isFormOpen ? (
+            <button type="button" onClick={abrirCriacao}>
+              Criar primeira atividade
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
-        {!isLoading && !loadError && atividades.length === 0 ? (
-          <section className="empty-state">
-            <p>Não há atividades cadastradas nesta turma.</p>
-            {!isFormOpen ? (
-              <button type="button" onClick={abrirCriacao}>
-                Nova atividade
-              </button>
-            ) : null}
-          </section>
-        ) : null}
-
-        {!isLoading && !loadError && atividades.length > 0 ? (
-          <div className="turmas-grid" aria-label="Lista de atividades">
+      {!isLoading && !loadError && atividades.length > 0 ? (
+        <section className="atividades-collection" aria-labelledby="atividades-list-title">
+          <div className="atividades-list-header">
+            <div>
+              <h2 id="atividades-list-title">Atividades publicadas</h2>
+              <p>Abra as entregas, edite orientações ou encerre itens que não serão usados.</p>
+            </div>
+            <span className="atividades-count">
+              {atividades.length} {atividades.length === 1 ? 'atividade' : 'atividades'} ·{' '}
+              {atividadesAtivas} {atividadesAtivas === 1 ? 'ativa' : 'ativas'}
+            </span>
+          </div>
+          <div className="atividades-grid" role="list" aria-label="Lista de atividades">
             {atividades.map((atividade) => (
               <AtividadeCard
                 key={atividade.id}
@@ -268,8 +324,8 @@ export function ProfessorTurmaAtividadesPage() {
               />
             ))}
           </div>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
     </main>
   )
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/hooks/useAuth'
+import { LoadingState } from '../components/LoadingState'
 import type { TipoUsuario } from '../auth/types/auth.types'
 
 interface PrivateRouteProps {
@@ -13,7 +14,11 @@ export function PrivateRoute({ children, allowedTipoUsuario }: PrivateRouteProps
   const { isAuthenticated, isLoading, user } = useAuth()
 
   if (isLoading) {
-    return <p>Carregando sessão...</p>
+    return (
+      <main className="auth-page">
+        <LoadingState>Carregando sessão...</LoadingState>
+      </main>
+    )
   }
 
   if (!isAuthenticated || !user) {

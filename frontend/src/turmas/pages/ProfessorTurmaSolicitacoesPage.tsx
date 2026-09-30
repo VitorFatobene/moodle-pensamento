@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useParams } from 'react-router-dom'
+import { EmptyState } from '../../components/EmptyState'
+import { LoadingState } from '../../components/LoadingState'
 import { ProfessorSolicitacaoCard } from '../../solicitacoes/components/ProfessorSolicitacaoCard'
 import {
   aceitarSolicitacao,
@@ -124,30 +126,42 @@ export function ProfessorTurmaSolicitacoesPage() {
       <TurmaPlaceholderNav />
 
       <section className="section-panel">
-        <h1>Solicitações da turma</h1>
+        <div className="panel-header">
+          <div>
+            <h1>Solicitações pendentes</h1>
+            <p>Analise os alunos que pediram entrada nesta turma.</p>
+          </div>
+        </div>
 
-        {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
-        {operationError ? <p className="form-error">{operationError}</p> : null}
+        <div className="feedback-stack" aria-live="polite">
+          {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
+          {operationError ? <p className="form-error">{operationError}</p> : null}
+        </div>
 
-        {isLoading ? <p>Carregando solicitações...</p> : null}
+        {isLoading ? <LoadingState>Carregando solicitações...</LoadingState> : null}
 
         {!isLoading && loadError ? (
-          <>
+          <div className="state-panel state-panel--error">
             <p className="form-error">{loadError}</p>
             {id ? (
               <button type="button" onClick={() => void carregarSolicitacoes()}>
                 Tentar novamente
               </button>
             ) : null}
-          </>
+          </div>
         ) : null}
 
         {!isLoading && !loadError && solicitacoes.length === 0 ? (
-          <p>Não há solicitações pendentes para esta turma.</p>
+          <EmptyState title="Fila vazia">
+            Não há solicitações pendentes.
+          </EmptyState>
         ) : null}
 
         {!isLoading && !loadError && solicitacoes.length > 0 ? (
-          <div className="turmas-grid" aria-label="Lista de solicitações pendentes">
+          <div
+            className="solicitacoes-list"
+            aria-label="Lista de solicitações pendentes"
+          >
             {solicitacoes.map((solicitacao) => (
               <ProfessorSolicitacaoCard
                 key={solicitacao.id}

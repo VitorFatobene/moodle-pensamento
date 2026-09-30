@@ -5,6 +5,11 @@ import { useAuth } from '../hooks/useAuth'
 import { getUser } from '../services/authStorage'
 import type { TipoUsuario } from '../types/auth.types'
 
+interface ApiErrorResponse {
+  message?: string
+  fields?: Record<string, string>
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
   const { isAuthenticated, isLoading, login, user } = useAuth()
@@ -83,9 +88,22 @@ function getRedirectPath(tipoUsuario: TipoUsuario): string {
 }
 
 function getLoginErrorMessage(error: unknown): string {
-  if (isAxiosError(error) && error.response?.status === 401) {
+  if (!isAxiosError<ApiErrorResponse>(error)) {
+    return 'Não foi possível realizar o login.'
+  }
+
+  if (!error.response) {
+    return 'Não foi possível acessar a API. Verifique se o backend está rodando e se a origem está liberada no CORS.'
+  }
+
+  if (error.response.status === 401) {
     return 'Email ou senha inválidos.'
   }
 
-  return 'Não foi possível realizar o login.'
+  if (error.response.status === 400) {
+    const firstFieldMessage = Object.values(error.response.data.fields ?? {})[0]
+    return firstFieldMessage ?? error.response.data.message ?? 'Verifique os dados informados.'
+  }
+
+  return error.response.data.message ?? 'Não foi possível realizar o login.'
 }

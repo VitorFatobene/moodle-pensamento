@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useParams } from 'react-router-dom'
+import { LoadingState } from '../../components/LoadingState'
+import { StatusBadge } from '../../components/StatusBadge'
 import { MinhaEntregaSection } from '../../entregas/components/MinhaEntregaSection'
 import {
   buscarMinhaEntregaDaAtividade,
@@ -16,77 +18,70 @@ import { buscarAtividadePorId } from '../services/atividadeService'
 import type { Atividade } from '../types/atividade.types'
 
 export function AlunoAtividadeDetalhePage() {
-  const { atividadeId } = useParams()
-  const id = parseId(atividadeId)
+  const { turmaId, atividadeId } = useParams()
+
+  return (
+    <AlunoAtividadeDetalheContent
+      key={`${turmaId ?? 'turma-invalida'}-${atividadeId ?? 'atividade-invalida'}`}
+      turmaId={parseId(turmaId)}
+      atividadeId={parseId(atividadeId)}
+    />
+  )
+}
+
+interface AlunoAtividadeDetalheContentProps {
+  turmaId: number | null
+  atividadeId: number | null
+}
+
+function AlunoAtividadeDetalheContent({
+  turmaId,
+  atividadeId,
+}: AlunoAtividadeDetalheContentProps) {
   const [atividade, setAtividade] = useState<Atividade | null>(null)
   const [entrega, setEntrega] = useState<EntregaAtividade | null>(null)
-  const [isLoadingAtividade, setIsLoadingAtividade] = useState(Boolean(id))
-  const [isLoadingEntrega, setIsLoadingEntrega] = useState(Boolean(id))
+  const [isLoadingAtividade, setIsLoadingAtividade] = useState(Boolean(turmaId && atividadeId))
+  const [isLoadingEntrega, setIsLoadingEntrega] = useState(Boolean(turmaId && atividadeId))
   const [isSavingEntrega, setIsSavingEntrega] = useState(false)
   const [isConcluding, setIsConcluding] = useState(false)
   const [atividadeError, setAtividadeError] = useState<string | null>(
-    id ? null : 'Identificador da atividade inválido.',
+    turmaId && atividadeId ? null : 'Identificador da turma ou da atividade inválido.',
   )
-  const [entregaError, setEntregaError] = useState<string | null>(null)
+  const [entregaLoadError, setEntregaLoadError] = useState<string | null>(null)
+  const [entregaOperationError, setEntregaOperationError] = useState<string | null>(null)
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
-
-  const carregarDados = useCallback(async () => {
-    if (!id) {
-      setAtividadeError('Identificador da atividade inválido.')
-      setIsLoadingAtividade(false)
-      setIsLoadingEntrega(false)
-      return
-    }
-
-    setIsLoadingAtividade(true)
-    setIsLoadingEntrega(true)
-    setAtividadeError(null)
-    setEntregaError(null)
-
-    try {
-      const [atividadeData, entregaData] = await Promise.all([
-        buscarAtividadePorId(id),
-        buscarMinhaEntregaDaAtividade(id),
-      ])
-
-      setAtividade(atividadeData)
-      setEntrega(entregaData)
-    } catch (error: unknown) {
-      setAtividadeError(getAtividadeErrorMessage(error))
-    } finally {
-      setIsLoadingAtividade(false)
-      setIsLoadingEntrega(false)
-    }
-  }, [id])
+  const [reloadVersion, setReloadVersion] = useState(0)
+  const [entregaReloadVersion, setEntregaReloadVersion] = useState(0)
 
   useEffect(() => {
     let isActive = true
 
-    async function carregar() {
-      if (!id) {
+    async function carregarAtividade() {
+      if (!turmaId || !atividadeId) {
         if (isActive) {
-          setAtividadeError('Identificador da atividade inválido.')
+          setAtividadeError('Identificador da turma ou da atividade inválido.')
           setIsLoadingAtividade(false)
-          setIsLoadingEntrega(false)
         }
         return
       }
 
       setIsLoadingAtividade(true)
-      setIsLoadingEntrega(true)
       setAtividadeError(null)
-      setEntregaError(null)
+      setAtividade(null)
 
       try {
-        const [atividadeData, entregaData] = await Promise.all([
-          buscarAtividadePorId(id),
-          buscarMinhaEntregaDaAtividade(id),
-        ])
+        const atividadeData = await buscarAtividadePorId(atividadeId)
 
-        if (isActive) {
-          setAtividade(atividadeData)
-          setEntrega(entregaData)
+        if (!isActive) {
+          return
         }
+
+        if (atividadeData.turmaId !== turmaId) {
+          setAtividadeError('A atividade não pertence à turma informada.')
+          return
+        }
+
+        setAtividade(atividadeData)
       } catch (error: unknown) {
         if (isActive) {
           setAtividadeError(getAtividadeErrorMessage(error))
@@ -94,33 +89,72 @@ export function AlunoAtividadeDetalhePage() {
       } finally {
         if (isActive) {
           setIsLoadingAtividade(false)
+        }
+      }
+    }
+
+    void carregarAtividade()
+
+    return () => {
+      isActive = false
+    }
+  }, [atividadeId, reloadVersion, turmaId])
+
+  useEffect(() => {
+    let isActive = true
+
+    async function carregarEntrega() {
+      if (!turmaId || !atividadeId) {
+        if (isActive) {
+          setIsLoadingEntrega(false)
+        }
+        return
+      }
+
+      setIsLoadingEntrega(true)
+      setEntregaLoadError(null)
+      setFeedbackMessage(null)
+      setEntrega(null)
+
+      try {
+        const entregaData = await buscarMinhaEntregaDaAtividade(atividadeId)
+
+        if (isActive) {
+          setEntrega(entregaData)
+        }
+      } catch (error: unknown) {
+        if (isActive) {
+          setEntregaLoadError(getEntregaLoadErrorMessage(error))
+        }
+      } finally {
+        if (isActive) {
           setIsLoadingEntrega(false)
         }
       }
     }
 
-    void carregar()
+    void carregarEntrega()
 
     return () => {
       isActive = false
     }
-  }, [id])
+  }, [atividadeId, entregaReloadVersion, reloadVersion, turmaId])
 
   async function handleSalvarEntrega(dados: EntregaAtividadeRequest) {
-    if (!id) {
+    if (!atividadeId || isSavingEntrega || isConcluding || entregaLoadError) {
       return
     }
 
     setIsSavingEntrega(true)
-    setEntregaError(null)
+    setEntregaOperationError(null)
     setFeedbackMessage(null)
 
     try {
-      const entregaAtualizada = await salvarEntrega(id, dados)
+      const entregaAtualizada = await salvarEntrega(atividadeId, dados)
       setEntrega(entregaAtualizada)
       setFeedbackMessage('Entrega salva com sucesso.')
     } catch (error: unknown) {
-      setEntregaError(getEntregaErrorMessage(error))
+      setEntregaOperationError(getEntregaErrorMessage(error))
       throw error
     } finally {
       setIsSavingEntrega(false)
@@ -128,20 +162,20 @@ export function AlunoAtividadeDetalhePage() {
   }
 
   async function handleConcluirAtividade() {
-    if (!id) {
+    if (!atividadeId || isSavingEntrega || isConcluding || entregaLoadError) {
       return
     }
 
     setIsConcluding(true)
-    setEntregaError(null)
+    setEntregaOperationError(null)
     setFeedbackMessage(null)
 
     try {
-      const entregaAtualizada = await concluirAtividade(id)
+      const entregaAtualizada = await concluirAtividade(atividadeId)
       setEntrega(entregaAtualizada)
       setFeedbackMessage('Atividade marcada como concluída.')
     } catch (error: unknown) {
-      setEntregaError(getEntregaErrorMessage(error))
+      setEntregaOperationError(getEntregaErrorMessage(error))
       throw error
     } finally {
       setIsConcluding(false)
@@ -152,37 +186,58 @@ export function AlunoAtividadeDetalhePage() {
     <main className="page-shell">
       <TurmaPlaceholderAluno />
 
-      {isLoadingAtividade ? <p>Carregando atividade...</p> : null}
+      {isLoadingAtividade ? (
+        <section className="section-panel state-panel atividade-task-rail">
+          <LoadingState>Carregando atividade...</LoadingState>
+        </section>
+      ) : null}
 
       {!isLoadingAtividade && atividadeError ? (
-        <section className="section-panel">
-          <p className="form-error">{atividadeError}</p>
-          {id ? (
-            <button type="button" onClick={() => void carregarDados()}>
+        <section className="section-panel state-panel state-panel--error atividade-task-rail">
+          <p className="form-error" role="alert">
+            {atividadeError}
+          </p>
+          {turmaId && atividadeId ? (
+            <button type="button" onClick={() => setReloadVersion((version) => version + 1)}>
               Tentar novamente
             </button>
           ) : null}
         </section>
       ) : null}
 
-      {!isLoadingAtividade && atividade ? (
-        <>
-          <section className="section-panel">
-            <div className="turma-card-header">
-              <h1>{atividade.titulo}</h1>
-              <span className="turma-status">{atividade.status}</span>
+      {!isLoadingAtividade && !atividadeError && atividade ? (
+        <div className="atividade-task-rail">
+          <section className="section-panel atividade-detail">
+            <div className="atividade-detail__header">
+              <div>
+                <span className="atividade-detail__context">Atividade</span>
+                <h1>{atividade.titulo}</h1>
+              </div>
+              <StatusBadge value={atividade.status} />
             </div>
 
-            <p>{atividade.descricao}</p>
+            <p className="atividade-detail__description">{atividade.descricao}</p>
 
-            <dl className="turma-meta turma-detail-meta">
+            <dl className="turma-meta turma-detail-meta atividade-detail__meta">
               <div>
                 <dt>Criada em</dt>
-                <dd>{formatarData(atividade.dataCriacao)}</dd>
+                <dd>
+                  <time dateTime={atividade.dataCriacao}>
+                    {formatarData(atividade.dataCriacao)}
+                  </time>
+                </dd>
               </div>
               <div>
                 <dt>Data limite</dt>
-                <dd>{formatarDataOpcional(atividade.dataLimite)}</dd>
+                <dd>
+                  {atividade.dataLimite ? (
+                    <time dateTime={atividade.dataLimite}>
+                      {formatarData(atividade.dataLimite)}
+                    </time>
+                  ) : (
+                    'Sem prazo definido'
+                  )}
+                </dd>
               </div>
               <div>
                 <dt>Nota máxima</dt>
@@ -192,18 +247,20 @@ export function AlunoAtividadeDetalhePage() {
           </section>
 
           <MinhaEntregaSection
-            key={entrega?.id ?? 'sem-entrega'}
+            key={`${entrega?.id ?? 'sem-entrega'}-${entrega?.status ?? 'pendente'}-${entrega?.linkEntrega ?? 'sem-link'}`}
             entrega={entrega}
             notaMaxima={atividade.notaMaxima}
             isLoading={isLoadingEntrega}
             isSaving={isSavingEntrega}
             isConcluding={isConcluding}
-            errorMessage={entregaError}
+            loadErrorMessage={entregaLoadError}
+            errorMessage={entregaOperationError}
             feedbackMessage={feedbackMessage}
             onSave={handleSalvarEntrega}
             onConclude={handleConcluirAtividade}
+            onRetryLoad={() => setEntregaReloadVersion((version) => version + 1)}
           />
-        </>
+        </div>
       ) : null}
     </main>
   )
@@ -229,7 +286,15 @@ function getAtividadeErrorMessage(error: unknown): string {
     }
   }
 
-  return 'Não foi possível carregar as atividades.'
+  return 'Não foi possível carregar a atividade.'
+}
+
+function getEntregaLoadErrorMessage(error: unknown): string {
+  if (isAxiosError(error) && error.response?.status === 403) {
+    return 'Você não possui acesso às entregas desta turma.'
+  }
+
+  return 'A atividade foi carregada, mas não foi possível consultar sua entrega. Tente novamente.'
 }
 
 function getEntregaErrorMessage(error: unknown): string {
@@ -251,11 +316,7 @@ function getEntregaErrorMessage(error: unknown): string {
     }
   }
 
-  return 'Não foi possível atualizar sua entrega.'
-}
-
-function formatarDataOpcional(value: string | null): string {
-  return value ? formatarData(value) : 'Sem prazo definido'
+  return 'Não foi possível atualizar sua entrega. Tente novamente.'
 }
 
 function formatarData(value: string): string {

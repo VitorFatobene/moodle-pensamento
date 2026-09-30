@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { StatusBadge } from '../../components/StatusBadge'
 import type { Matricula } from '../../matriculas/types/matricula.types'
 
 interface AlunoTurmaCardProps {
@@ -9,8 +10,11 @@ export function AlunoTurmaCard({ matricula }: AlunoTurmaCardProps) {
   return (
     <article className="turma-card">
       <div className="turma-card-header">
-        <h2>{matricula.turmaNome}</h2>
-        <span className="turma-status">{matricula.status}</span>
+        <div className="turma-card-title">
+          <h2>{matricula.turmaNome}</h2>
+          <p>Turma matriculada</p>
+        </div>
+        <StatusBadge value={matricula.status} />
       </div>
 
       <dl className="turma-meta">
@@ -20,9 +24,11 @@ export function AlunoTurmaCard({ matricula }: AlunoTurmaCardProps) {
         </div>
       </dl>
 
-      <Link className="text-link" to={`/aluno/turmas/${matricula.turmaId}`}>
-        Acessar turma
-      </Link>
+      <div className="turma-card-actions">
+        <Link className="text-link" to={`/aluno/turmas/${matricula.turmaId}`}>
+          Acessar turma
+        </Link>
+      </div>
     </article>
   )
 }

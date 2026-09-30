@@ -1,3 +1,4 @@
+import { StatusBadge } from '../../components/StatusBadge'
 import type { SolicitacaoEntrada } from '../types/solicitacao.types'
 
 interface ProfessorSolicitacaoCardProps {
@@ -14,27 +15,41 @@ export function ProfessorSolicitacaoCard({
   onReject,
 }: ProfessorSolicitacaoCardProps) {
   return (
-    <article className="turma-card">
-      <div className="turma-card-header">
-        <h2>{solicitacao.alunoNome}</h2>
-        <span className="turma-status">{solicitacao.status}</span>
+    <article
+      className={`turma-card solicitacao-card ${
+        isProcessing ? 'solicitacao-card--processing' : ''
+      }`}
+      aria-busy={isProcessing}
+    >
+      <div className="turma-card-header solicitacao-card-header">
+        <div className="solicitacao-card-title">
+          <h2>{solicitacao.alunoNome}</h2>
+          <p>Solicitou entrada em {solicitacao.turmaNome}</p>
+        </div>
+        <StatusBadge value={solicitacao.status} />
       </div>
 
-      <dl className="turma-meta">
+      <dl className="turma-meta solicitacao-meta" aria-label="Dados da solicitação">
         <div>
           <dt>Turma</dt>
           <dd>{solicitacao.turmaNome}</dd>
         </div>
         <div>
-          <dt>Solicitada em</dt>
+          <dt>Solicitado em</dt>
           <dd>{formatarData(solicitacao.dataSolicitacao)}</dd>
         </div>
       </dl>
 
-      <div className="form-actions">
+      {isProcessing ? (
+        <p className="info-message solicitacao-processing" role="status">
+          Processando solicitação...
+        </p>
+      ) : null}
+
+      <div className="form-actions solicitacao-actions" aria-label="Ações da solicitação">
         <button
           type="button"
-          className="secondary-button"
+          className="danger-subtle-button"
           disabled={isProcessing}
           onClick={() => onReject(solicitacao.id)}
         >

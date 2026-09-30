@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { LoadingState } from '../../components/LoadingState'
 import { AlunoTurmaHeader } from '../components/AlunoTurmaHeader'
 import { buscarTurmaPorId } from '../services/turmaService'
 import type { Turma } from '../types/turma.types'
@@ -55,7 +56,7 @@ export function AlunoTurmaDetalhePage() {
 
   return (
     <main className="page-shell">
-      {isLoading ? <p>Carregando turma...</p> : null}
+      {isLoading ? <LoadingState>Carregando turma...</LoadingState> : null}
 
       {!isLoading && loadError ? (
         <section className="section-panel">
@@ -67,9 +68,46 @@ export function AlunoTurmaDetalhePage() {
         <>
           <AlunoTurmaHeader turma={turma} />
 
-          <section className="section-panel">
-            <h2>Visão geral</h2>
-            <p>Consulte avisos e atividades usando a navegação da turma.</p>
+          <section className="turma-overview">
+            <div className="section-panel turma-overview-primary">
+              <div className="panel-header">
+                <div>
+                  <h2>Visão geral</h2>
+                  <p>Consulte os recursos disponíveis e acompanhe as próximas atividades.</p>
+                </div>
+              </div>
+
+              <dl className="turma-meta turma-detail-meta">
+                <div>
+                  <dt>Professor</dt>
+                  <dd>{turma.professorNome}</dd>
+                </div>
+                <div>
+                  <dt>Status</dt>
+                  <dd>{turma.status}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <section className="section-panel">
+              <div className="panel-header">
+                <div>
+                  <h2>Atalhos da turma</h2>
+                  <p>Acesse rapidamente os materiais e comunicados desta turma.</p>
+                </div>
+              </div>
+
+              <div className="turma-shortcut-grid">
+                <Link className="turma-shortcut-card" to={`/aluno/turmas/${turma.id}/avisos`}>
+                  <strong>Avisos</strong>
+                  <span>Veja comunicados publicados pelo professor.</span>
+                </Link>
+                <Link className="turma-shortcut-card" to={`/aluno/turmas/${turma.id}/atividades`}>
+                  <strong>Atividades</strong>
+                  <span>Acompanhe atividades e entregas.</span>
+                </Link>
+              </div>
+            </section>
           </section>
         </>
       ) : null}

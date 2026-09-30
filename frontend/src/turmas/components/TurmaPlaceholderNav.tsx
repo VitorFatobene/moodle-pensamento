@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { NavLink, useParams } from 'react-router-dom'
 
 export function TurmaPlaceholderNav() {
   const { turmaId } = useParams()
@@ -6,11 +6,13 @@ export function TurmaPlaceholderNav() {
 
   return (
     <nav className="turma-tabs" aria-label="Navegação da turma">
-      <Link to={basePath}>Visão geral</Link>
-      <Link to={`${basePath}/avisos`}>Avisos</Link>
-      <Link to={`${basePath}/alunos`}>Alunos</Link>
-      <Link to={`${basePath}/solicitacoes`}>Solicitações</Link>
-      <Link to={`${basePath}/atividades`}>Atividades</Link>
+      <NavLink end to={basePath}>
+        Visão geral
+      </NavLink>
+      <NavLink to={`${basePath}/avisos`}>Avisos</NavLink>
+      <NavLink to={`${basePath}/alunos`}>Alunos</NavLink>
+      <NavLink to={`${basePath}/solicitacoes`}>Solicitações</NavLink>
+      <NavLink to={`${basePath}/atividades`}>Atividades</NavLink>
     </nav>
   )
 }

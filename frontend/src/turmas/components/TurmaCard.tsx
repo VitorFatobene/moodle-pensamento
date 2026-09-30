@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { StatusBadge } from '../../components/StatusBadge'
+import { TurmaAccessCode } from './TurmaAccessCode'
 import type { Turma } from '../types/turma.types'
 
 interface TurmaCardProps {
@@ -9,26 +11,27 @@ export function TurmaCard({ turma }: TurmaCardProps) {
   return (
     <article className="turma-card">
       <div className="turma-card-header">
-        <h2>{turma.nome}</h2>
-        <span className="turma-status">{turma.status}</span>
+        <div className="turma-card-title">
+          <h2>{turma.nome}</h2>
+          <p>{turma.descricao || 'Sem descrição informada.'}</p>
+        </div>
+        <StatusBadge value={turma.status} />
       </div>
 
-      <p>{turma.descricao || 'Sem descrição informada.'}</p>
+      <TurmaAccessCode code={turma.codigoEntrada} />
 
       <dl className="turma-meta">
-        <div>
-          <dt>Código da turma</dt>
-          <dd>{turma.codigoEntrada}</dd>
-        </div>
         <div>
           <dt>Professor</dt>
           <dd>{turma.professorNome}</dd>
         </div>
       </dl>
 
-      <Link className="text-link" to={`/professor/turmas/${turma.id}`}>
-        Acessar turma
-      </Link>
+      <div className="turma-card-actions">
+        <Link className="text-link" to={`/professor/turmas/${turma.id}`}>
+          Acessar turma
+        </Link>
+      </div>
     </article>
   )
 }

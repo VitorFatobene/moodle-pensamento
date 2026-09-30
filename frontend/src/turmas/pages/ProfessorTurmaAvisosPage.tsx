@@ -3,6 +3,8 @@ import { isAxiosError } from 'axios'
 import { useParams } from 'react-router-dom'
 import { AvisoCard } from '../../avisos/components/AvisoCard'
 import { AvisoForm } from '../../avisos/components/AvisoForm'
+import { EmptyState } from '../../components/EmptyState'
+import { LoadingState } from '../../components/LoadingState'
 import {
   atualizarAviso,
   criarAviso,
@@ -193,22 +195,41 @@ export function ProfessorTurmaAvisosPage() {
       <TurmaPlaceholderNav />
 
       <section className="section-panel">
-        <h1>Avisos da turma</h1>
+        <div className="panel-header">
+          <div>
+            <h1>Avisos da turma</h1>
+            <p>Publique comunicados e acompanhe o mural visível para os alunos.</p>
+          </div>
 
-        {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
-        {operationError ? <p className="form-error">{operationError}</p> : null}
-
-        {!isFormOpen && !loadError && avisos.length > 0 ? (
-          <div className="form-actions">
+          {!isFormOpen && !loadError ? (
             <button type="button" onClick={abrirCriacao}>
               Novo aviso
             </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
+
+        <div className="feedback-stack" aria-live="polite">
+          {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
+          {operationError ? <p className="form-error">{operationError}</p> : null}
+        </div>
 
         {isFormOpen ? (
-          <>
-            <h2>{editingAviso ? 'Editar aviso' : 'Novo aviso'}</h2>
+          <section
+            className={`aviso-form-panel ${
+              editingAviso ? 'aviso-form-panel--editing' : ''
+            }`}
+            aria-labelledby="aviso-form-title"
+          >
+            <div className="form-header">
+              <h2 id="aviso-form-title">
+                {editingAviso ? 'Editar aviso' : 'Novo aviso'}
+              </h2>
+              <p>
+                {editingAviso
+                  ? 'Revise o conteúdo antes de salvar as alterações no comunicado.'
+                  : 'Crie um comunicado para todos os alunos desta turma.'}
+              </p>
+            </div>
             <AvisoForm
               key={editingAviso?.id ?? 'new'}
               initialValues={initialFormValues}
@@ -217,39 +238,40 @@ export function ProfessorTurmaAvisosPage() {
               onCancel={fecharFormulario}
               onSubmit={editingAviso ? handleAtualizarAviso : handleCriarAviso}
             />
-          </>
+          </section>
         ) : null}
 
-        {isLoading ? <p>Carregando avisos...</p> : null}
+        {isLoading ? <LoadingState>Carregando avisos...</LoadingState> : null}
 
         {!isLoading && loadError ? (
-          <>
+          <div className="state-panel state-panel--error">
             <p className="form-error">{loadError}</p>
             {id ? (
               <button type="button" onClick={() => void carregarAvisos()}>
                 Tentar novamente
               </button>
             ) : null}
-          </>
+          </div>
         ) : null}
 
-        {!isLoading && !loadError && avisos.length === 0 ? (
-          <section className="empty-state">
-            <p>Não há avisos publicados nesta turma.</p>
-            {!isFormOpen ? (
-              <button type="button" onClick={abrirCriacao}>
-                Novo aviso
-              </button>
-            ) : null}
+        {!isLoading && !loadError && avisos.length === 0 && !isFormOpen ? (
+          <section className="empty-section">
+            <EmptyState title="Mural sem publicações">
+              Não há avisos publicados nesta turma.
+            </EmptyState>
+            <button type="button" onClick={abrirCriacao}>
+              Publicar primeiro aviso
+            </button>
           </section>
         ) : null}
 
         {!isLoading && !loadError && avisos.length > 0 ? (
-          <div className="turmas-grid" aria-label="Lista de avisos">
+          <div className="avisos-list" aria-label="Lista de avisos">
             {avisos.map((aviso) => (
               <AvisoCard
                 key={aviso.id}
                 aviso={aviso}
+                variant="admin"
                 isProcessing={processingAvisoId === aviso.id}
                 onEdit={abrirEdicao}
                 onDelete={(avisoId) => void handleExcluirAviso(avisoId)}

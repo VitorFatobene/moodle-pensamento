@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useAuth } from '../../auth/hooks/useAuth'
+import { EmptyState } from '../../components/EmptyState'
+import { LoadingState } from '../../components/LoadingState'
 import { CriarTurmaForm } from '../components/CriarTurmaForm'
 import { TurmaCard } from '../components/TurmaCard'
 import { criarTurma, listarTurmasDoProfessor } from '../services/turmaService'
@@ -85,10 +87,10 @@ export function ProfessorTurmasPage() {
 
   return (
     <main className="page-shell">
-      <header className="page-header">
+      <header className="page-header turmas-page-header">
         <div>
           <h1>Minhas turmas</h1>
-          <p>Gerencie as turmas que serão utilizadas nas próximas etapas.</p>
+          <p>Organize as turmas, compartilhe códigos de entrada e acesse os espaços de trabalho.</p>
         </div>
 
         <button type="button" onClick={() => setShowCreateForm(true)}>
@@ -99,8 +101,13 @@ export function ProfessorTurmasPage() {
       {feedbackMessage ? <p className="success-message">{feedbackMessage}</p> : null}
 
       {showCreateForm ? (
-        <section className="section-panel">
-          <h2>Nova turma</h2>
+        <section className="section-panel turma-form-panel">
+          <div className="panel-header">
+            <div>
+              <h2>Nova turma</h2>
+              <p>Crie a turma e compartilhe o código de entrada com os alunos.</p>
+            </div>
+          </div>
           {createError ? <p className="form-error">{createError}</p> : null}
           <CriarTurmaForm
             isSubmitting={isCreating}
@@ -113,7 +120,11 @@ export function ProfessorTurmasPage() {
         </section>
       ) : null}
 
-      {isLoading ? <p>Carregando turmas...</p> : null}
+      {isLoading ? (
+        <section className="section-panel">
+          <LoadingState>Carregando turmas...</LoadingState>
+        </section>
+      ) : null}
 
       {!isLoading && loadError ? (
         <div className="section-panel">
@@ -125,9 +136,10 @@ export function ProfessorTurmasPage() {
       ) : null}
 
       {!isLoading && !loadError && turmas.length === 0 ? (
-        <section className="section-panel empty-state">
-          <h2>Você ainda não possui turmas.</h2>
-          <p>Crie uma turma para gerar o código de entrada dos alunos.</p>
+        <section className="section-panel empty-workspace">
+          <EmptyState title="Você ainda não possui turmas.">
+            Crie uma turma para gerar o código de entrada dos alunos.
+          </EmptyState>
           <button type="button" onClick={() => setShowCreateForm(true)}>
             Nova turma
           </button>
@@ -135,11 +147,21 @@ export function ProfessorTurmasPage() {
       ) : null}
 
       {!isLoading && !loadError && turmas.length > 0 ? (
-        <section className="turmas-grid" aria-label="Lista de turmas">
-          {turmas.map((turma) => (
-            <TurmaCard key={turma.id} turma={turma} />
-          ))}
-        </section>
+        <>
+          <section className="turmas-summary" aria-label="Resumo de turmas">
+            <span>
+              {turmas.length}{' '}
+              {turmas.length === 1 ? 'turma cadastrada' : 'turmas cadastradas'}
+            </span>
+            <span>Use o código de entrada para convidar alunos.</span>
+          </section>
+
+          <section className="turmas-grid" aria-label="Lista de turmas">
+            {turmas.map((turma) => (
+              <TurmaCard key={turma.id} turma={turma} />
+            ))}
+          </section>
+        </>
       ) : null}
     </main>
   )

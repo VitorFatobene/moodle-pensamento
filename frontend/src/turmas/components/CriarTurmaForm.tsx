@@ -41,23 +41,27 @@ export function CriarTurmaForm({
 
   return (
     <form className="turma-form" onSubmit={handleSubmit}>
-      <label>
+      <label htmlFor="turma-nome">
         Nome
         <input
+          id="turma-nome"
           type="text"
           value={nome}
           onChange={(event) => setNome(event.target.value)}
           disabled={isSubmitting}
+          placeholder="Ex.: Pensamento Computacional"
           required
         />
       </label>
 
-      <label>
+      <label htmlFor="turma-descricao">
         Descrição
         <textarea
+          id="turma-descricao"
           value={descricao}
           onChange={(event) => setDescricao(event.target.value)}
           disabled={isSubmitting}
+          placeholder="Informe uma breve descrição para orientar os alunos."
           rows={4}
         />
       </label>
@@ -65,7 +69,12 @@ export function CriarTurmaForm({
       {validationError ? <p className="form-error">{validationError}</p> : null}
 
       <div className="form-actions">
-        <button type="button" className="secondary-button" onClick={onCancel}>
+        <button
+          type="button"
+          className="secondary-button"
+          disabled={isSubmitting}
+          onClick={onCancel}
+        >
           Cancelar
         </button>
         <button type="submit" disabled={isSubmitting}>

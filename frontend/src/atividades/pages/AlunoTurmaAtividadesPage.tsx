@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useParams } from 'react-router-dom'
+import { EmptyState } from '../../components/EmptyState'
+import { LoadingState } from '../../components/LoadingState'
 import { TurmaPlaceholderAluno } from '../../turmas/components/TurmaPlaceholderAluno'
 import { AtividadeCard } from '../components/AtividadeCard'
 import { listarAtividadesDaTurma } from '../services/atividadeService'
@@ -78,28 +80,52 @@ export function AlunoTurmaAtividadesPage() {
     <main className="page-shell">
       <TurmaPlaceholderAluno />
 
-      <section className="section-panel">
-        <h1>Atividades da turma</h1>
+      <header className="page-header atividades-page-header">
+        <div>
+          <h1>Atividades da turma</h1>
+          <p>Acompanhe instruções, prazos e notas de cada atividade.</p>
+        </div>
+      </header>
 
-        {isLoading ? <p>Carregando atividades...</p> : null}
+      {isLoading ? (
+        <section className="section-panel state-panel">
+          <LoadingState>Carregando atividades...</LoadingState>
+        </section>
+      ) : null}
 
-        {!isLoading && loadError ? (
-          <>
-            <p className="form-error">{loadError}</p>
-            {id ? (
-              <button type="button" onClick={() => void carregarAtividades()}>
-                Tentar novamente
-              </button>
-            ) : null}
-          </>
-        ) : null}
+      {!isLoading && loadError ? (
+        <section className="section-panel state-panel state-panel--error">
+          <p className="form-error" role="alert">
+            {loadError}
+          </p>
+          {id ? (
+            <button type="button" onClick={() => void carregarAtividades()}>
+              Tentar novamente
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
-        {!isLoading && !loadError && atividades.length === 0 ? (
-          <p>Não há atividades disponíveis nesta turma.</p>
-        ) : null}
+      {!isLoading && !loadError && atividades.length === 0 ? (
+        <section className="section-panel atividade-empty">
+          <EmptyState title="Nenhuma atividade disponível">
+            Quando o professor publicar uma atividade, ela aparecerá aqui com prazo e nota.
+          </EmptyState>
+        </section>
+      ) : null}
 
-        {!isLoading && !loadError && atividades.length > 0 ? (
-          <div className="turmas-grid" aria-label="Lista de atividades">
+      {!isLoading && !loadError && atividades.length > 0 ? (
+        <section className="atividades-collection" aria-labelledby="atividades-list-title">
+          <div className="atividades-list-header">
+            <div>
+              <h2 id="atividades-list-title">Atividades disponíveis</h2>
+              <p>Priorize os itens com prazo próximo e abra os detalhes para enviar sua entrega.</p>
+            </div>
+            <span className="atividades-count">
+              {atividades.length} {atividades.length === 1 ? 'atividade' : 'atividades'}
+            </span>
+          </div>
+          <div className="atividades-grid" role="list" aria-label="Lista de atividades">
             {atividades.map((atividade) => (
               <AtividadeCard
                 key={atividade.id}
@@ -108,8 +134,8 @@ export function AlunoTurmaAtividadesPage() {
               />
             ))}
           </div>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
     </main>
   )
 }

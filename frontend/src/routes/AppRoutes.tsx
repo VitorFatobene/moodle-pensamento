@@ -17,6 +17,7 @@ import { ProfessorTurmaAvisosPage } from '../turmas/pages/ProfessorTurmaAvisosPa
 import { ProfessorTurmaDetalhePage } from '../turmas/pages/ProfessorTurmaDetalhePage'
 import { ProfessorTurmaSolicitacoesPage } from '../turmas/pages/ProfessorTurmaSolicitacoesPage'
 import { ProfessorTurmasPage } from '../turmas/pages/ProfessorTurmasPage'
+import { MainLayout } from '../layout/MainLayout'
 import { PrivateRoute } from './PrivateRoute'
 
 export function AppRoutes() {
@@ -28,7 +29,9 @@ export function AppRoutes() {
         path="/professor"
         element={
           <PrivateRoute allowedTipoUsuario="PROFESSOR">
-            <ProfessorHomePage />
+            <MainLayout>
+              <ProfessorHomePage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -36,7 +39,9 @@ export function AppRoutes() {
         path="/professor/turmas"
         element={
           <PrivateRoute allowedTipoUsuario="PROFESSOR">
-            <ProfessorTurmasPage />
+            <MainLayout>
+              <ProfessorTurmasPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -44,7 +49,9 @@ export function AppRoutes() {
         path="/professor/turmas/:turmaId"
         element={
           <PrivateRoute allowedTipoUsuario="PROFESSOR">
-            <ProfessorTurmaDetalhePage />
+            <MainLayout>
+              <ProfessorTurmaDetalhePage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -52,7 +59,9 @@ export function AppRoutes() {
         path="/professor/turmas/:turmaId/avisos"
         element={
           <PrivateRoute allowedTipoUsuario="PROFESSOR">
-            <ProfessorTurmaAvisosPage />
+            <MainLayout>
+              <ProfessorTurmaAvisosPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -60,7 +69,9 @@ export function AppRoutes() {
         path="/professor/turmas/:turmaId/alunos"
         element={
           <PrivateRoute allowedTipoUsuario="PROFESSOR">
-            <ProfessorTurmaAlunosPage />
+            <MainLayout>
+              <ProfessorTurmaAlunosPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -68,7 +79,9 @@ export function AppRoutes() {
         path="/professor/turmas/:turmaId/solicitacoes"
         element={
           <PrivateRoute allowedTipoUsuario="PROFESSOR">
-            <ProfessorTurmaSolicitacoesPage />
+            <MainLayout>
+              <ProfessorTurmaSolicitacoesPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -76,7 +89,9 @@ export function AppRoutes() {
         path="/professor/turmas/:turmaId/atividades"
         element={
           <PrivateRoute allowedTipoUsuario="PROFESSOR">
-            <ProfessorTurmaAtividadesPage />
+            <MainLayout>
+              <ProfessorTurmaAtividadesPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -84,7 +99,9 @@ export function AppRoutes() {
         path="/professor/turmas/:turmaId/atividades/:atividadeId/entregas"
         element={
           <PrivateRoute allowedTipoUsuario="PROFESSOR">
-            <ProfessorAtividadeEntregasPage />
+            <MainLayout>
+              <ProfessorAtividadeEntregasPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -92,7 +109,9 @@ export function AppRoutes() {
         path="/aluno"
         element={
           <PrivateRoute allowedTipoUsuario="ALUNO">
-            <AlunoHomePage />
+            <MainLayout>
+              <AlunoHomePage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -100,7 +119,9 @@ export function AppRoutes() {
         path="/aluno/solicitacoes"
         element={
           <PrivateRoute allowedTipoUsuario="ALUNO">
-            <AlunoSolicitacoesPage />
+            <MainLayout>
+              <AlunoSolicitacoesPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -108,7 +129,9 @@ export function AppRoutes() {
         path="/aluno/turmas"
         element={
           <PrivateRoute allowedTipoUsuario="ALUNO">
-            <AlunoTurmasPage />
+            <MainLayout>
+              <AlunoTurmasPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -116,7 +139,9 @@ export function AppRoutes() {
         path="/aluno/turmas/:turmaId"
         element={
           <PrivateRoute allowedTipoUsuario="ALUNO">
-            <AlunoTurmaDetalhePage />
+            <MainLayout>
+              <AlunoTurmaDetalhePage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -124,7 +149,9 @@ export function AppRoutes() {
         path="/aluno/turmas/:turmaId/avisos"
         element={
           <PrivateRoute allowedTipoUsuario="ALUNO">
-            <AlunoTurmaAvisosPage />
+            <MainLayout>
+              <AlunoTurmaAvisosPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -132,7 +159,9 @@ export function AppRoutes() {
         path="/aluno/turmas/:turmaId/atividades"
         element={
           <PrivateRoute allowedTipoUsuario="ALUNO">
-            <AlunoTurmaAtividadesPage />
+            <MainLayout>
+              <AlunoTurmaAtividadesPage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
@@ -140,7 +169,9 @@ export function AppRoutes() {
         path="/aluno/turmas/:turmaId/atividades/:atividadeId"
         element={
           <PrivateRoute allowedTipoUsuario="ALUNO">
-            <AlunoAtividadeDetalhePage />
+            <MainLayout>
+              <AlunoAtividadeDetalhePage />
+            </MainLayout>
           </PrivateRoute>
         }
       />
